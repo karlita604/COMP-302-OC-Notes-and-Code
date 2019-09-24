@@ -13,10 +13,10 @@ type 'a list =
 | (::) of 'a * 'a list
 ```
 
-# How to prove properties about lists?
+## How to prove properties about lists?
 
 
-#Example: DOes is compute something meaningful
+##Example: DOes is compute something meaningful
 
 ---Program A---
 ```
@@ -24,7 +24,20 @@ let rec rev 1 = match l with
 |[] -> []
 | x::1 -> (rev 1) @ [x]
 ```
+HOW ARE WE GOING TO PROVE???
 
+//Correctness property :
+//For all 1 length (rev 1) = length 1 <---- P 
+//Base Case <---- needs to be the empty list
+
+For all list l, length (rev 1) = length 1
+NOTE: our property P (1) = length(rev1) = length 1
+
+By induction on th list l
+
+BASE CASE: 1 = []
+length(rev []) --> length []   //by the program rev
+                              
 
 # But what is equality??
 
@@ -32,3 +45,4 @@ let rec rev 1 = match l with
 -We should write
 "There exists v and w st length(rev 1) *down arrow* v and length 1 *down arrow* w and v = w"
 -The notation e *down arrow* v ====== e evaluates to the value of v
+- We will write e = e' but its an abuse of notation

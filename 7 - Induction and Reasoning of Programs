@@ -51,14 +51,28 @@ TO SHOW: length (rev(x::xs)) = length (x::xs)
 
 length(rev(x::xs)) 
 ---> length((rev xs) @ [x]) by program rev
+---> length (rev xs) + length[x] by LEMMA
 
-
-SOMEHOW: length(l1 @ l2) = length l1 + length l2 . // try to prove this property for practice
+LEMMA: length(l1 @ l2) = length l1 + length l2 . // try to prove this property for practice
   This is a property we would like to use, but we need to prove.
   
+---> length (rev xs) + 1  // by program length
+---> length (xs) + 1      // by commutativity
+<--- 1 + length (xs)      // by induction hypothesis
+<--- length (x::xs)       // by program length
+
+The case analyis of your proof falls out of the 
+The recipe immediately tells us what is the smaller list
+Directly leads to how tp prove for alsit no matter what
+  Base case
+  Ind hyp
+  Assume it true for a smaller list
   
-                      
-                      
+
+
+length (x::xs) --> 1 + length (xs) by program length by commutativity +
+
+
 
 # But what is equality??
 
@@ -67,3 +81,33 @@ SOMEHOW: length(l1 @ l2) = length l1 + length l2 . // try to prove this property
 "There exists v and w st length(rev 1) *down arrow* v and length 1 *down arrow* w and v = w"
 -The notation e *down arrow* v ====== e evaluates to the value of v
 - We will write e = e' but its an abuse of notation
+
+
+
+
+
+---Program B ---
+```
+let rec rev_tr l acc = match l with
+|[] -> acc
+|x::xs -> rev_tr xs (x::xs)
+
+```
+
+
+HOW TO PROVE:
+
+
+For all lists if you run rev l then it would be like running rev_tr l [] 
+
+induction l
+
+BASE CASE:
+l = []
+rev []
+---> []
+
+STEP CASE:
+Assume that rev xs = rev_tr xs []
+To show that rev (x::xs) = rev_tr (x::xs) []
+

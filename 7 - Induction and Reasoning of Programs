@@ -1,0 +1,16 @@
+
+
+
+## Inductive definition of a list
+
+- The empty list [] is a list of type 'a list
+- If x is an element of type 'a and xs is a list of type 'a list then x::xs is a list of type 'a list
+-Nothing else is a list of type 'a list
+
+``` 
+type 'a list =
+| []
+| (::) of 'a * 'a list
+```
+
+# How to prove properties about lists

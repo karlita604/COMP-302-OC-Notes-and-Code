@@ -13,4 +13,22 @@ type 'a list =
 | (::) of 'a * 'a list
 ```
 
-# How to prove properties about lists
+# How to prove properties about lists?
+
+
+#Example: DOes is compute something meaningful
+
+---Program A---
+```
+let rec rev 1 = match l with
+|[] -> []
+| x::1 -> (rev 1) @ [x]
+```
+
+
+# But what is equality??
+
+-When we say length(rev 1) = legnth 1, we are not saying that these are the same program!
+-We should write
+"There exists v and w st length(rev 1) *down arrow* v and length 1 *down arrow* w and v = w"
+-The notation e *down arrow* v ====== e evaluates to the value of v

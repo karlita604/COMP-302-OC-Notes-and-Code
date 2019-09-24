@@ -99,15 +99,86 @@ HOW TO PROVE:
 
 
 For all lists if you run rev l then it would be like running rev_tr l [] 
+rev l = rev_tr l []
 
-induction l
+INDUCTION l
 
-BASE CASE:
-l = []
-rev []
+Base l = []
+--> rev []
 ---> []
 
 STEP CASE:
 Assume that rev xs = rev_tr xs []
 To show that rev (x::xs) = rev_tr (x::xs) []
+
+
+So now if we evalute it 
+rev_tr (x::xs) []
+---> rev_tr xs (xs::[])
+
+** compare to ...
+
+rev (x::xs)
+---> rev(xs) @ [x]
+
+//this is kinda wrong -- how can we generalize to make this correct?
+
+******BUT A MORE GENERAL VERSION TO MAKE IT RIGHT********
+For all list l, for acc:
+(rev l) @ acc = rev_tr l acc 
+*********************************************************
+What is the property we are proving about l?
+  P(l) == for all acc.
+  (rev l ) @ acc == rev_tr l acc
+
+INDUCTION l
+
+Base l = []
+rev [] @ acc
+--> [] @ acc
+---> acc
+
+STEP CASE:   l = x::xs
+Assume that: for all acc. (rev xs) @ acc = rev_tr xs acc
+To show that: rev (x::xs) @ acc = rev_tr (x::xs) acc
+
+rev(x::xs) @ acc
+--> (rev xs @ [x]) @ acc    by program rev
+--> (rev xs) @ ([x] @ acc)  by assc of @
+---> (rev xs) @ (x::acc)    by program @
+
+
+****THEOREM****
+For all l, acc.
+length (rev_tr l acc) = length l + length acc
+***************
+
+
+The property P(l) = THEOREM
+
+Induction on l
+Step l = x:xs
+Assuming: For all l, acc.
+          length (rev_tr xs acc) = length xs + length acc
+To show: For all l, acc.
+          length (rev_tr (x::xs) acc) = length (x::xs) + length acc
+
+Base l = []
+length (rev_tr [] acc)
+---> length acc       by program rev_tr
+
+length [] + length acc
+---> 0 + length acc   by program rev_tr
+---> length acc       by 
+
+
+
+length (rev_tr (x::xs) acc)
+--> length (rev_tr xs (x::acc))
+-->length (xs) + length ( x::acc) . by IH
+//choosing (x::acc) for acc
+
+---> length xs + (1 + length acc) .  by program length
+---> length (xs + 1) + length acc     by program length
+---> length (xs + 1) + acc
 

@@ -1,6 +1,5 @@
 
 
-
 ## Inductive definition of a list##
 
 - The empty list [] is a list of type 'a list
@@ -21,9 +20,10 @@ type 'a list =
 
 
 
-##Example: DOes is compute something meaningful
+##Example: Does is compute something meaningful
 
----Program A---
+**Program A**
+
 ```
 let rec rev 1 = match l with
 |[] -> []
@@ -48,6 +48,15 @@ By Induction on the list l
 STEP CASE: 1 = x::xs
 ASSUME (IH): length(rev xs) = length xs
 TO SHOW: length (rev(x::xs)) = length (x::xs)
+
+length(rev(x::xs)) 
+---> length((rev xs) @ [x]) by program rev
+
+
+SOMEHOW: length(l1 @ l2) = length l1 + length l2 . // try to prove this property for practice
+  This is a property we would like to use, but we need to prove.
+  
+  
                       
                       
 

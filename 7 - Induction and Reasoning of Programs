@@ -1,7 +1,7 @@
 
 
 
-## Inductive definition of a list
+## Inductive definition of a list##
 
 - The empty list [] is a list of type 'a list
 - If x is an element of type 'a and xs is a list of type 'a list then x::xs is a list of type 'a list
@@ -13,7 +13,12 @@ type 'a list =
 | (::) of 'a * 'a list
 ```
 
-## How to prove properties about lists?
+## How to prove properties about lists? ##
+
+
+
+
+
 
 
 ##Example: DOes is compute something meaningful
@@ -24,7 +29,7 @@ let rec rev 1 = match l with
 |[] -> []
 | x::1 -> (rev 1) @ [x]
 ```
-HOW ARE WE GOING TO PROVE???
+___HOW ARE WE GOING TO PROVE???___
 
 //Correctness property :
 //For all 1 length (rev 1) = length 1 <---- P 
@@ -37,7 +42,14 @@ By induction on th list l
 
 BASE CASE: 1 = []
 length(rev []) --> length []   //by the program rev
-                              
+                      
+By Induction on the list l
+
+STEP CASE: 1 = x::xs
+ASSUME (IH): length(rev xs) = length xs
+TO SHOW: length (rev(x::xs)) = length (x::xs)
+                      
+                      
 
 # But what is equality??
 

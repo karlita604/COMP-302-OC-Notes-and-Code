@@ -85,12 +85,12 @@ let rec insert (k,v) t = match t with
  ==> lookup x (Node (x,d), l, r))      by program insert
  ==> Some d                            by program lookup
  
- Sub-Case: y<x
+ Sub-Case: x<y
  lookup x (insert(x,d) (Node ((y,v), l, r))
  ==> lookup (Node ((y,v), (insert (x,d) l), r)) by program insert
  ==> lookup x (insert (x,d) l)                  by program lookout
  ==> Some(d)                                    by IH1
- Sub-Case: y>x
+ Sub-Case: x>y
  
  
  
@@ -101,12 +101,79 @@ let rec insert (k,v) t = match t with
  
  
  let rec lookup k t = match t with
-2 | Empty -> None
-3 | Node (l , (k ’ , x ) , r ) ->
-4 if k = k ’ then
-5 Some x
-6 else
-7 if k < k ’ then lookup k l else lookup k r
+ | Empty -> None
+ | Node (l , (k ’ , x ) , r ) ->
+if k = k ’ then
+ Some x
+else
+if k < k ’ then lookup k l else lookup k r
+         
+         
+         
+************************************************************************         
+         
+         
+ Should just follow the recipe -- can be generalized 
+ 
+ 
+ type flavour = Chocolate | Raspberry | coconut
+ type 'a cake = 
+ |Slice of 'a
+ |MoreCake of 'a cake * 'a cake
+ 
+ let rec count c = match c with 
+ |Slice f -> 1
+ |MoreCake (c1, c2) -> count c1 + count c2
+ 
+ let rec cut c = match c with 
+ |Slice f ->  MoreCake( Slice f, Slice f)
+ |MoreCake(c1,c2) -> MoreCake (cut c1, cut c2)
+ 
+ 
+ Prove: count (cut c ) = count c * 2
+ 
+ Prove by Induction on c
+ 
+ BASE: c = Slice f
+ TO SHOW: count (cut (Slice f)) = (count (Slice f)) * 2
+ 
+ 
+ count (cut (slice f))
+ ==> count (MoreCake (Slice f, Slice f)       by prog cut
+ ==> count (Slice f) + cut (Slice f)          by prog count
+ ==>2
+ 
+ count(Slice f) *2
+ ==>1*2
+ ==>2
+ 
+ Base case holds
+ 
+ STEP: 
+ 
+ 
+ NOT DONE TOOK PIC
+ 
+ 
+ 
+ 
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
          
          
          

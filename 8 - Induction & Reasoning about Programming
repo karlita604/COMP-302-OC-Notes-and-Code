@@ -1,0 +1,61 @@
+*** Inductive definition od a binary tree ***
+
+    * The empty tree /Empty/ is a binary tree, of type 'a tree
+    * If l : 'a tree
+
+It might be difficult to encode rthe invariant that we have -- correspond to the restriction that 
+Red-Black trees have
+
+This is not captured in the inductive definition that we are seeing here
+
+
+*** Binary Search Trees***
+A binary search three t: ('a * 'a) tree is a binary tree
+
+  * we want to insert something 
+  
+  
+  
+  How are we going to do insertion????
+  
+  
+  let t1 = Node((9, "a"), Node((3, "pepper"), Node ((2, "salt"), Empty, Empty), Node ((5, "dog"), Node((4, "camel"), Empty
+  
+  
+  
+  
+  (* insert:  'a * 'b -> ('a * 'b) tree -> ('a * 'b) tree
+   
+   insert (x,d) T = T'  where (x,d) has been inserted into T
+   and any previous occurrences of (x,d') in T have been
+   overwritten
+  
+*)
+
+let rec insert (k,v) t = match t with 
+  | Empty -> Node (Empty, (k,v), Empty)
+  | Node (l, (k',v'), r) ->
+    if k = k   
+    then Node (l, (k,v), r)
+      (if k<k' 
+      then insert (k,v) l)
+      else 
+      insert
+    else if fst e < fst e'
+         then Node (insert e l, e', r)
+         else Node (l, e', insert e r)
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         

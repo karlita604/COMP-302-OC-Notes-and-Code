@@ -35,16 +35,78 @@ A binary search three t: ('a * 'a) tree is a binary tree
 let rec insert (k,v) t = match t with 
   | Empty -> Node (Empty, (k,v), Empty)
   | Node (l, (k',v'), r) ->
-    if k = k   
-    then Node (l, (k,v), r)
+    if k = k'   
+    then Node ((k',v), l, r)
+    else
       (if k<k' 
-      then insert (k,v) l)
+      then Node((k',v'), insert (k,v) l), r)
       else 
-      insert
-    else if fst e < fst e'
-         then Node (insert e l, e', r)
-         else Node (l, e', insert e r)
+      Node ((k',v'), l, insert (k,v) r)
          
+        
+        
+ let rec lookup k t = match t with
+ |Empty -> None
+ |Node((k',v'), l, r) -> 
+   if k = k' then 
+      some (v')
+      else 
+         (
+            if k<k' then
+            lookup 
+            
+            
+            
+ *****We will use induction***** 
+ 
+ 
+ STEP 1 : SAY HOW  YOU ARE GOING TO PROVE THIS
+ 
+   INDUCTION ON t
+   
+   Base: t = Empty
+   TO SHOW: lookup x (insert(x,d) Empty) ==> Some(d)
+   
+   lookup x (insert (x,d) Empty)
+   ==> lookup x (Node ((x,d), Empty, Empty))    by program insert
+   ==> Sode d                                   by program lookup
+   
+   
+   Step: t = Node ((y,v), l, r)
+   IH1: lookup x (Node ((x,d) l) = Some(d)
+   IH2: lookup x (Node ((x,d) r) = Some(d)
+   
+  TO SHOW: lookup x (insert(x,d) (Node ((y,v), l, r)) ==> Some(d)
+  
+  lookup x (insert(x,d) (Node ((y,v), l, r)) ==> Some(d)
+ 
+ Sub-Case: y=x
+ lookup x (insert(x,d) (Node ((y,v), l, r))
+ ==> lookup x (Node (x,d), l, r))      by program insert
+ ==> Some d                            by program lookup
+ 
+ Sub-Case: y<x
+ lookup x (insert(x,d) (Node ((y,v), l, r))
+ ==> lookup (Node ((y,v), (insert (x,d) l), r)) by program insert
+ ==> lookup x (insert (x,d) l)                  by program lookout
+ ==> Some(d)                                    by IH1
+ Sub-Case: y>x
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ let rec lookup k t = match t with
+2 | Empty -> None
+3 | Node (l , (k ’ , x ) , r ) ->
+4 if k = k ’ then
+5 Some x
+6 else
+7 if k < k ’ then lookup k l else lookup k r
          
          
          

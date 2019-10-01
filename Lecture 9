@@ -1,0 +1,138 @@
+Midterm topics
+  * Topics and values : finding out the type of an expression, evaluating an expression by hand
+      Go back to some of the ideas aboit hwo a progarm evaluates, how it evaluates
+  * Recursion: writing and identifying tail recursive functions
+  *Datatypes: defining datatypes, matching on data types. 
+  **LISTS AND TREES**
+  *Higher order function
+        **Built in higher order functions : List.map, List.fold_left etc
+        *** Using new higher order functions: 
+  *Induction: Using infuction principles for list & trees, deriving induction principles and new data types
+  
+  
+  A strategy  
+  Just write a regular recursive program that would solve the problem asked -- 50% of the points
+  This way you are hopefully understanding what the problem, come back to it after.
+  
+  
+  QUESTION:
+  Which of the following higher-order functions of the List module would be best suited to making a non-recursive version of the filter function
+  
+  list and a predicate (p) -> input
+  output -> 
+  
+  ('a list ) -> ('a list) -> ('a list)
+  
+  let rec filter p = function
+  |[] -> []
+  | x::xs ->
+  if p x then 
+  x:: filter p xs
+  else
+  filter p xs
+  
+  
+  for_all --  returns a boolean value -- checks that all elements are the same // CANNOT RETURN A LIST
+  exists -- takes in a predicate ,bool and returns a bool 
+  
+  map -- apply a function to each element in the list -- preserves a length of the list (ie ints to floats in a list)
+  you will get a list back that has exactly the same length 
+  
+  
+  
+  
+  
+  
+  
+  let m0 = [[1;2;3;4] ; [1;2;3;4]]
+  let m1 = [[1;0;0;0] ; [0;1;0;0] ; [0;0;1;0] ; [0;0;0;1]]
+  
+  let rec filter_tl p l acc = match l with 
+  | [] -> acc
+  |x::xs -> if p x then filter_tl p xs (x::acc)
+  else 
+  filter_tl p xs acc
+  
+  
+  
+  let filter p l =
+  List.fold_left (fun acc -> if p x then acc@[x] else acc ) [] l
+  
+  
+  
+  let rec map f l = match l with 
+  |[] -> []
+  | x:: xs -> (f x):: map f xs
+  
+  
+  
+  \\
+  If you want to remove even elements of list
+  List.map(fun x -> mod 2 = 0 ) [1;3;2;7;4]
+  THIS RETURNS A LIST OF BOOLEANS THAT SAY TRUE IF COND IS FUFILLED
+  
+  \\
+  List.fold_left
+  ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a = <fun>
+  
+  \\filter_tl (fun x -> x mod 2 = 0) [1;3;2;7;4]
+  int list = [4;2]
+  
+  
+  
+  
+  
+  
+  Recall that function allows you to directly do patterm matching
+  
+  List.fold_left and right 
+  f(a1, f(a2 , ...f(an, acc))) 
+   f(an, f(a2 , ...f(a1, acc)))
+  
+  
+  
+  
+  
+  MORE ON HIGHER ORDER FUNCTIONS
+  A square matrix is diagonal if it is nonzero entries are only on its diagonal
+  
+  How do we write a program that checks that this function is diagonal?
+  LET IT BE RECURSIVE
+  
+  Look for the submatrices
+  Lists are always built from left to right
+  
+  let is_empty m =
+  List.for_all(fun x -> x = []) m
+  
+  let rec diag m =
+  if is_empty m then
+  true
+  else (
+  match m with
+  | (1::rs)::ms ->          //ms is the submatrix without the first row
+    let c = List.map List.hd ms in
+   
+    List.for_all (fun x -> x = 0) rs
+     && List.for_all (fun x -> x = 0) ms
+  | _ -> false
+  
+  NOT DONE TOOK PIC
+  
+  
+  
+  DERIVING NEW INDUCTION PRINCIPLES
+  
+  type exp = 
+  | Lit of int
+  | Var of string
+  | Plus of exp * exp
+  
+  
+  
+  
+  
+  
+  
+  
+  

@@ -1,0 +1,246 @@
+
+
+
+*****Types*****
+Tuples:
+(x,y) : a * b --> type of tuples of a and b
+
+type of (3,("hello, "world"))?
+: (int * (string * string ))
+
+Boolean: F or T
+Finite type: Yes
+
+Int: 1,2,3,...
+Finite type: No
+
++ We can extend the predefined types of int, float, char, string with user-defined types!
+
+```type suit = Clubs | Spades | Hearts | Diamonds```
++ Collection of elements (constructors) which are of type suit
+
+*****Pattern Matching*****
+
+```
+match < expression > with
+2 | < pattern > -> < expression >
+3 | < pattern > -> < expression >
+4 ...
+5 | < pattern > -> < expression >
+```
++ A pattern is either a variable, a tuple or a wildcard
+
+
+```
+match (3, “hello”, “world”)) with
+| (_, (x,_)) = (3, “hello”, “world”)) in x
+|(a,_) -> a
+
+
+*****Card Example*****
+```
+type suit = Clubs | Spades | Hearts | Diamonds
+
+type rank = 
+ Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King | Ace
+
+type card = rank * suit
+
+type hand = Empty | Hand of card * hand
++This is a recursive Datatype 
+
+let hand0 : hand = Empty
+let hand1 : hand = Hand((Ace, Hearts), Empty)
+let hand2 : hand = Hand((Queen, Diamonds), hand1)
+let hand5 : hand =
+  Hand
+    ( (Ace, Spades)
+    , Hand
+        ( (Ten, Diamonds)
+        , Hand
+            ( (Seven, Clubs)
+            , Hand
+                ( (Queen, Spades)
+                , Hand
+                    ( (Eight, Clubs)
+                    , Empty
+                    )
+                )
+            )
+        )
+    )
+		
+		
+ extract : suit -> hand -> hand
+   extract s h returns a hand consisting of all card in h of suit s.
+   Invariants: none
+   Effects: none
+
+
+let rec extract (s : suit) (h : hand) = match h with 
+  | Empty -> Empty
+  | Hand ((r', s') as c, h') -> 
+     if s = s'
+     then Hand(c, extract s h')
+     else extract s h'
+
+let rec count h acc = match h with
+|Empty -> acc
+|Hand (c, h') -> count h' (acc + 1)
+```
+
+
+************************************************************************)
+(* Lists *)
+
+(* Here is how one might define lists of elements of the same type: *)
+
+type 'a mylist = Nil | Cons of 'a * 'a mylist
+(* Has something to describe the empty list
+Polymorphic -- generic type description -- can be used with any type 
+General principle doesnt change
+*)
+
+
+(* 'a type variable = parameter of list (a list of anything type of things) (just 
+like option was an option of any type of list-- generics = polymorphism 
+
+All of these are base elements of their collection of values*)
+
+(*type 'a option = None | Some of 'a  is what we used in class *)
+
+
+(* Some sample values: *)
+
+let list0 : int mylist = Nil
+let list1 : int mylist = Cons(1, Nil)
+let list2 : int mylist = Cons(2, Cons(1, Nil))
+let list3 : int mylist = Cons(3, list2)
+
+let lst0 : float mylist = Nil
+let lst1 : float mylist = Cons(3.1, Cons(2.6, lst0))
+
+
+(* And using the predefined ML lists, we have these values: *)
+let rlist1 : float list = [8.6;5.4]
+let rlist2 : float list = 8.6::5.4::[]
+
+
+(*
+
+Lists are built into Ocaml 
+Syntax = ::
+This element can only take an element and a list, it may not take two lists
+will get a type error
+*)
+
+
+(* append: 'a list -> 'a list -> 'a list
+       append(l1, l2) returns a list consisting of the elements of l1
+                      followed by the elements of l2.
+   Invariants: none
+   Effects: none
+
+   NOTE:  This operation is defined in ML's Standard Basis 
+          via the right-associative infix operator "@".
+
+   Observe that the running time is proportional to the length 
+   of the first argument.
+*)
+
+let rec append l1 l2 = match l1 with 
+  | []    -> l2
+  | x::l' -> x::append l' l2
+
+  (* append [1;2;3] [5;6;7]
+  note that this is the same as 
+append 1::[2;3] {5;6;7]
+so we want to write the recursivel call
+==> 1:: append 2::[3] {5;6;7]
+etc
+etc
+
+
+h :: t CONSTRUCTOR
+
+
+
+@ is a recursive function
+    l1  @      l2   : 'a list
+'a list -> 'a list -> 'a list
+
+
+*)
+
+
+let app12  : float list = append rlist1 rlist2
+let app12' : float list = rlist1 @ rlist2
+
+
+(* Remark : Writing functions without pattern matching 
+            *** Old style ***
+            This requires to write first functions which 
+	    allow us to take apart lists.
+*)
+
+(* head: 'a list -> 'a 
+
+   Note: head may be undefined for the empty list
+
+ let head (h::t) = h;;
+           ^^^^^^^^^^
+Warning P: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+[]
+
+
+let head l = match l with [] -> None | x::l' -> Some x
+
+*)
+
+let head (h::t) = h
+
+(* tail: 'a list -> 'a list *)
+let tail l = match l with 
+  | [] -> []
+  | h::t -> t
+
+(* Destructor style *)
+let rec app (l1, l2) = 
+  if l1 = [] then l2
+    else 
+      head(l1)::(app (tail(l1), l2))
+
+
+
+(* Here is a function that reverses a list.
+   For example,   rev [1, 2, 3, 4] ==> [4, 3, 2, 1].
+
+   The code below is extremely inefficient.
+   Can you see why?
+   Next lecture we will see a more efficient implementation.
+
+
+   let rev : 'a list -> 'a list
+       rev(l) returns a list consisting of the elements of l in reverse order.
+   Invariants: none
+   Effects: none
+
+*)
+
+let rec rev l = match l with 
+  | []   -> []
+  | x::l -> (rev l) @ [x]
+
+
+(* What is the tail-recursive version of this? *)
+
+let rev' l = 
+  let rec rev_tr l acc = match l with 
+    | []   -> acc
+    | h::t -> rev_tr t (h::acc)
+  in
+    rev_tr l []
+
+
+

@@ -1,0 +1,142 @@
+Concepts:
+Writing and executing basic expressions
+Names, Values, Basic Types
+Variables, Bindings, Scope of Variables
+Simple Functions
+
+*****Basics*****
+
+Integers
+Reals -- Floating Point Ints
+    *. and /. --> operators that only work with floats
+    
+    Floating-point representations have a base (which is always assumed to be even)
+   and a precision p. If b = 10 and p = 3, then the number 0.1 is represented as
+   1.00 × 10^-1. If b = 2 and p = 24, then the decimal number 0.1 cannot be
+   represented exactly, but is approximately 1.10011001100110011001101 × 2^-4.  
+
+   SEE 
+   http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+   What every computer scientist should know about floating point numbers
+
+Characters
+Strings
+Booleans
+
+
+The errors given are usually very instructive when it comes to syntax. Read them carefully
+
+*****Variable Bindings*****
+
++ A binding is not an assignment
++ We bind values to variables we do not bind expression to variables
++ Variables cannot be updated -- they can only be overshadowed in the stack of bindings
++ Look in the past not the future
++ Variable bindings persist 
+    + Variable bindings exist within a scope
+    + Local or global
+    
+   the variable m,n,k only exist within the scope of the expression.
+
+   in particular, after evaluating the expression, garbage collection
+   will dispose of these variable bindings;
+
+   since they are local bindings, they do not exist globally and cannot
+   be accessed by anyone else.
+
+
+let (m:int) = 3 in
+let (n:int) = m * m in  (* n = 9 *)
+let (k:int) = m * m in  (* k = 9 *)
+ k*n                    (* result will be 81 *)
+;;
+
+
+    Later bindings - if global - will overshadow earlier bindings
+   
+    
+    
+*****Functions*****
+
++Functions are values 
+
+```
+let area (r:float) = pi *. r *. r
+```
+float -> float
++WE LOOK IN THE PAST NOT IN THE FUTURE  -- draw your stack if you are unsure
+
++ Recursive functions use the keyword "rec"
+```let rec fact n = match n with
+| 0 -> 1
+| 1 -> 1
+| _ -> n *. fact (n-1)
+```
+int -> int
+
+```let rec fact n =
+  let rec f n =
+    if n = 0 then
+      1
+    else
+      n * f (n-1)
+  in
+    if n < 0 then raise Domain
+    else f n
+```
+
+Another recursive example
+```
+let add x y = x + y
+fun add x y -> x + y
+
+let rec sum n = match n with
+|0 -> 0
+|n -> n + sum(n-1)
+```
+
+
+*****Tail Recursion*****
+A function is said to be tail recursive if there is nothing to do except return a final value. Since the execution of the function is done, saving its stack frame (ie. where we remember the work still in general need to do) is redundant
+
+Instead of nesting the stack deeper, the current stack frame is reused. The caller is replaced with the callee. 
+
+We do not need to worry about space efficiency unlike in regular recursion.
+
+All recursive functions can be written as tail recursive
+
+
+pattern matching example:
+
+```
+let rec fact_tr n =
+    let f n m = match n with
+    |0 -> m
+    |n -> n * f(n-1) (n*m)
+    in
+    f n 1
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -128,7 +128,13 @@ Midterm topics
   | Var of string
   | Plus of exp * exp
   
+  type int_tree =
+  | Leaf of int
+  | Node of int * int_tree * int_tree
   
+  type 'a cake =
+  | Slice of 'a
+  | MoreCake of 'a cake * 'a cake
   
   
   

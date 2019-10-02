@@ -116,7 +116,25 @@ let rec fact_tr n =
     in
     f n 1
 ```
+fact_tr 3
+-> f 3 1
+-> f 2 ( 3 ∗ 1 )
+-> f 1 ( 2 ∗ 3 )
+-> f 0 ( 1 ∗ 6 )
+-> 6
 
++The inner helper function does all the work
++ The only thing left is to return the value
++ the accumulator keeps track of all the evaluations that take place so that
+the computer doesnt need to keep track of them - saves space
++ The acc represents the computation that should be done on f
+
+
++A function is said to be tail-recursive if there are no operations
+ to do after the recursive call.
++Since the local bindings of the function are unused after the recursive call,
+the stack frame they reside in can be overwritten. Therefore, tail-recursive
+functions take only constant (O(1)) stack space.
 
 
 

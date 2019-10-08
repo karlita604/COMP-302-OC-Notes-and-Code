@@ -1,0 +1,104 @@
+Computations and Effects
+
+
+
+Expressions in OCaml have characteristics:
++ An expression has a type -- a little lie
++ An expression evaluates to a value (or diverges)
+		+ It diverges but still has a type
+		
+		+ Every program that is trying to be executed -  has a type 
+
++ An expression may have a type and it may also have an effect ***
++ 
+
+
+
+let (k : int) = 4;;
+let (k : int) = 3 in k * K ;; (* let me introduce this value of k within this scope *)
+k;;
+(* What is the value of k? =4 *)
+
+We only overshadow the previous occurence of k in out binding stack within the scope of the k*k 
+We only see the past but we never see the future
+
+
+
+let test () = 
+  let pi   = 3.14 in                              (* 1 *)
+  let area = (fun r -> pi *. r *. r) in           (* 2 *)
+  let a2   = area (2.0) in                        (* 3 *)
+  let pi   = 6.0  in                              (* 4 *)
+  let a3 = area 2.0 in
+  print_string ("Area a2 = " ^ string_of_float a2 ^ "\n"); (*What will it print?*) = 12.56
+  print_string ("Area a3 = " ^ string_of_float a3 ^ "\n")  (*What will it print?*) = 12.56
+;;
+
+
+
+******How do we program with state?*****
++ How do we allocate?
+		``` let x = ref 0 ``` Allocate a reference with the name x in memory and initialized it with 0
+		+ We are creating a space in memory and we are storing the number 0 
+		+ the type of this expression is int ref
+			YOU CANNOT DO ADDDRESS ARITHMETIC r + 2 --> runtime error
+			
+			
+		 ```!r``` --> - : int = 0
+		
+		 ```r := 2``` --> - : unit = ()
+		 
+		 ```!r``` --> - : int = 2
++ How do we read value stored in a reference call?
+
+```!x```  -- Read value that is stroed in the reference cell with name r
+```
+
+
++ How do we compare two reference calls?
+		We might want to compare the content or we want to compare addresses
+		
+		+ "==" means compare two addresses
+		+ "=" means compare values
+		
+		
+		``` x:=3 OR x.content <_ 3``` Writes the value in the refernce cell with the name r. The previously stored value is overwritten
+		
+		
+		
+		DEMO 
+		
+		When we say:
+		
+		let r = ref 0
+		!r : int (*provided that r has int ref*)
+		r := <exp> (provided that r has 
+		r := 2;;
+		r = !r + 1;;
+		! r --> 3;;
+		
+		Cannot do pointer arithmetic (not usually recommended anyway)
+		
+		Let;s play a little but
+		
+		let s = ref 3;;
+		s = r;; --> boolean true
+		s++r;; -->boolean false
+		
+		
+		let t = int r = contents = 7
+		
+		
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -46,9 +46,9 @@ let test () =
 			
 		 ```!r``` --> - : int = 0
 		
-		 ```r := 2``` --> - : unit = ()
+		 ```r := 2``` --> - : unit = () UPDATE R
 		 
-		 ```!r``` --> - : int = 2
+		 ```!r``` --> - : int = 2  READ R
 + How do we read value stored in a reference call?
 
 ```!x```  -- Read value that is stroed in the reference cell with name r
@@ -86,16 +86,109 @@ let test () =
 		s++r;; -->boolean false
 		
 		
-		let t = int r = contents = 7
+*********************************
 		
 		
+		
+let run_up () = 
+  let pi   = 3.14 in                              (* 1 *)
+  let area (r : float) = !pi *. r *. r) in           (* 2 *)
+  let a2   = area (2.0) in                        (* 3 *)
+  (let pi   = 6.0  in                              (* 4 *)
+  
+  print_string ("Area a2 = " ^ string_of_float a2 ^ "\n"); (*What will it print?*) = 12.56
+  print_string ("Area a3 = " ^ string_of_float a3 ^ "\n"))  (*What will it print?*) = 12.56
+;;
+
+********************************
+
+Imperative Programming in OCaml
+
+```
+let imperative_fact n = 
+let result = ref 1 in 
+for i = 1 to n do 
+	result := !result * i
+done;
+!result
+```
+• More complicated than the purely functional version
+• Considered bad style in a functional language
+• Harder to reason about its correctness (can’t use induction!)
+
+When we talked about reasoning of our programs it always
+falls out of our inputs and outputs, when uyou use for loops , 
+memory location becomes really hairy
+
+
+GOOD USES OF STATE: GLOBAL COUNTER
+
+let counter = ref 0
+
+(* newVar () === > a, where a is a new name *)
+(* Names are described by strings and an nat. *)
+
+let counter = ref 0
+let newVar()=
+(counter := !counter +1;
+"a" ^ string_of_int (!counter));;   I AM UNSURE WHAT THE ^ MEANS HELP SOS -- i think it means concatinate
 
 
 
+print_string "302";;
+	302
+	- : unit = ()
+	
++ You can chain things together
+(print_string "302"; print_string "mCgill")
+	302mCgill
+	- : unit = ()
+	
+	
+(r := 42; print_string("I've updated r to " ^ (string_of_int (!r)))
+	I've updated r to 42
+	- : unit = ()
+	
+	
+	WHAT IF YOU HAD MULTIPLE FUNCTIONS THAT ACCESS THE SAME COUNTER	??
+	
+	
+let counter = ref 0
 
+(* newName () ===> a,  where a is a new name *)
+(* A names is a string denoting natural numbers.*)
+let newName () =
+  counter := !counter + 1;
+  "a" ^ string_of_int (!counter)
 
+(* However, this counter is global, and any other function could
+   modify it! *)
+   
+  (* Mimicking object-oriented programming, with _private_ state *)
+```
+let (tick, reset) =
+  let counter = ref 0 in 
+  let tick () =
+    incr counter;
+    !counter
+  in
+  let reset () =
+    counter := 0
+  in 
+  (tick , reset)
+```
+(* This declaration introduces two functions tick:unit -> int
+  and reset:unit -> unit. Their definitions share a private
+    variable `counter` that is bound to a reference cell
+    containing the current value of a shared counter. The tick
+    operation increments the counter and returns its new value, and
+    the reset operation resets its value to zero. The types
+    already suggest that (implicit) state is involved. 
+*)
 
-
+let c = counter_obj
+```c.tick```
+	
 
 
 

@@ -1,0 +1,239 @@
+*****Recap:How to allocate adn compare*****
+		let x = ref 0  
+		(* x has type ref*)
+		
+
+
+
+*****How do we read and write*****
+		Read: !x 
+		if the reference cell with  name x has type 'a ref, then x has type 'a
+		
+		let {contents = v} = x 
+		+ Pattern match on value that is the stored in the reference cell with the name x
+		
+		Update:  x:= 3   OR   x.contents <- 3
+		+ The return type of the assignment has type unit
+		+ Writes the value in the reference cell with the name r. The previously stored value is overwritten
+		
+		
+*****Warm-Up*****
+Given the following expression write down its type, (what does the expression evaluate to) and its effect, if any
++ Recall that an effect: print something to the screen or write something in memory
++ "What is the type, what is the value and what is the form of the effect"
+
+let x = 3 + 2 in x
+type: int
+value: 5
+effect: none
+
+fun x -> x + 3 * 2
+type: int -> int
+value: fun
+effect: none
+
+let x = ref (3+2) in x
+type: int ref
+value: some address in memory (5)
+effect: temp allocated a cell in memory and stored 5 -- will dispose after running this expression
+
+let x = ref (3+2) in x +1
+type: type error
+value: nope
+effect:
+
+let x = ref 3 in x := !x + 2
+type: unit <-- when you update the value it is of type int !!!!!!!!!!!!!
+value:5
+effect:
+
+fun x v -> x:= v
+type: 'a ref * 'a -> unit
+value: v
+effect: changes x to v -- will only occur once the reference value is passed for this expression
+
+fun x -> !x
+type: 'a ref -> 'a
+value:
+effect:
+
+fun x -> x := 3; x
+type: int ref -> int ref
+value:3
+effect: will override past valie of x and assign 3 to it
+
+*****Global COunter*****
+
+let counter = ref 0
+let newName () = 
+	(counter:= !counter + 1); "a" ^ string_of_int (!counter)
+	
+	
+	
+	type counter_object =
+	{tick : unit -> int;
+	resent: unit - unit }
+	
+	let counter_obj () = 
+		let counter = ref 0 in
+		NOT DONEEEEEE
+		
+*****Mutable Data Structures*****
+
++ we have worked with immutable structures like list, trees, etc.
++ Immutable data Structure:
+	It is impossible to change the structure of the list without building a modified copy of the structure
+	Immutable Data Structures are PERSISTENT.
+			operations performed on them do not destroy original structure
+			Implementations using immutable data structures 
+			
++ what are mutable data sturctures
+		Update in place
+		Linked list, arrays, etc
+		Update in place and modify the original/ existing structure without rebuilding it
+		
+		
+		
+		
+		
+		
+		
+		
+type 'a rlist = 
+|Empty 
+| RCons of 'a * 'a rlist ref
+
+let l1 = ref (RCons(4, ref Empty)
+let l2 = ref (RCons(5, l1) + points to the address of l1 not the binding stack 
+l1 := l2 --- TYPE ERROR -- NEED TO CHANGE TO 
+l1 := !l2 
+
+
+*****LINKED LIST******
+
+ let r1 = ref (RCons(1, ref Empty))
+ let r2 = ref (RCons(4, ref (RCons(6, ref Empty))))
+ 
+ 
+ let rapp_gen r1 = match !r1 with
+| Empty -> fun r2 -> r1 := !r2
+|RCons (x, r1') -> rapp_gen r1'
+
+
+
+
+let rev l = 
+	let r = ref Empty in 
+	let rec rev' l = match !l with
+	|Empty -> 
+	|RCons (x, xs) ->
+	
+	in 
+	(rev' l ; l:= !r)
+ 
+ let rec observe 1 n = begin match 1 with 
+ |Empty -> print_string "0"
+ |RCons (x, 1) -> if n = 0 then print_string "STOP\n"
+ 
+ 
+ 
+ WOOOOOOOOOOOOOW
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+let map_tree_tests: (((int -> int) * int tree) * int tree) list = [
+  (* Remember: your test cases should have this form:
+     ((f, t), output)
+  *)
+  
+  ((identity, t), t);
+  ((add1, Node (1,Node (2, Empty, Empty, Empty),Node (3, Empty, Empty, Empty),Node (4, Empty, Empty, Empty))), 
+   Node (2, Node (3, Empty, Empty, Empty), Node (4, Empty, Empty, Empty),
+         Node (5, Empty, Empty, Empty)));
+  ((identity, Empty), Empty);
+]
+
+(* TODO: Implement map_tree. *)
+let rec map_tree f t =match t with
+  |Empty -> Empty
+  |Node (a, l, c , r) -> Node ( f a, map_tree f l, map_tree f c, map_tree f r)
+
+
+(* TODO: Implement delete_data. *)
+let delete_data t =
+  map_tree (fun _ -> Empty) t
+
+(* TODO: Write some test cases for fold_tree. *)
+(* Note: we've added a type annotation here so that the compiler can help
+   you write tests of the correct form. *)
+let fold_tree_tests:
+  (((int * int * int * int -> int) * int * int tree) * int) list =
+  [
+  (* Remember: your test cases should have this form:
+     ((f, e, t), output))
+     Where:
+     - f is a function of type int * int * int * int -> int
+     - e has type int
+     - t is a tree of type int tree
+     - output has type int.
+    *)
+    (((fun _ -> 0), 3, t), 0); 
+    (((fun _ -> 0), 0, t), 0);
+  ]
+
+(* TODO: Implement fold_tree. *)
+let rec fold_tree f e t =
+  raise NotImplemented
+
+(* TODO: Write some test cases for size. *)
+let size_tests: (int tree * int) list = [
+]
+
+(* TODO: Implement size. *)
+let size t =
+  raise NotImplemented
+
+(* TODO: Write some test cases for reflect. *)
+let reflect_tests: (int tree * int tree) list = [
+]
+
+(* TODO: Implement reflect. *)
+let reflect t =
+  raise NotImplemented
+
+(* TODO: Write some test cases for postorder. *)
+let postorder_tests: (int tree * int list) list = [
+  (Empty, []);
+  (leaf 4, [4]);
+  (Node(1, Node(2, Empty,Empty,Empty), Node(3,Empty,Empty, Empty), Node(4, Empty Empty, Empty)), [2;3;4;1]);
+]
+
+(* TODO: Implement postorder. *)
+let postorder t =
+  fold_tree (fun (a, b, c, d) -> b 0 c 0 d 0 [a]) [] t
+                
+
+(* TODO: Implement add_head. *)
+let add_head x head =
+
+
+
+
+
+
+
+
+

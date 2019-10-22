@@ -1,0 +1,185 @@
+****Warm-up: Computation and Effects****
+
+
+* Every expression in Ocaml has a type
+* Every expression computes to a value or diverges (inf loop)
+* Expressions may also have an effect --> update memory, raise exceptions, print to screen...
+
+
+****Exceptions****
+
+Benefits:
+* Separate the "happy path" from exceptional circumstances --> avoid clutter
+* Diverting control flow!!!
+
+**** Static Vs. Dynamic Violations ****
+* Static violations are signalled by typechecking errors
+*Dynamic violations are signalled by raising an exception
+    --> unexxpected inputs
+
+
+```
+3/0
+```
+will type-check but cannot be evaluated and will incur a
+runtime fault that is signalled by raising the exception Division_by_zero
+
+Type= int
+Value= 
+Effect= raises run-time exception Division by zero
+
+```
+let head_of_empty_list
+let head (x::t) = x in head []
+```
+Type= 'a list
+Value= 
+Effect= raises run-time exception Match_failure
+
+Another source of dynamic run-time error is due to non-exhaustive
+ matches. For example:
+
+```
+let head (x::t) = x ;;
+Characters 9-19:
+  let head (x::t) = x ;;
+           ^^^^^^^^^^
+Warning P: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+[]
+val head : 'a list -> 'a = <fun>
+# head [];;
+Exception: Match_failure ("", 650, -489).
+#  
+```
+
+It is also possible to define our own exceptions. These last examples have used pre-defined exceptions.
+These pre-defined ones have pre-defined meaning.
+
+```
+exception Domain
+
+(*
+   Check the invariant for the externally
+   visible function only, and not during recursion.
+*)
+
+let fact n =
+  let rec f n = 
+    if n = 0 then 1
+    else n * f (n-1)  
+  in
+  if n < 0 then raise Domain
+  else f n
+
+(* Define a wrapper for `fact` that catches the error and nicely prints it. *)
+let runFact n =
+  try
+    let r = fact n in 
+    print_string ("Factorial of " ^  string_of_int n ^ " is " ^ string_of_int r ^ "\n")
+  with
+  | Domain ->
+     print_string "Error: Invariant violated -- trying to call factorial on inputs < 0"
+```
+
+Notice how we declared our own exception
+Technically, an `exception` declaration is _adding a new constructor_ to the preexisting type `exn`.
+When we define such new exception, we can also bundle other data, similar to ordinary constructors.
+Then, the try-with construct allows us to catch raised exceptions and perform _pattern-matching_ on the `exn` type.
+
+Example
+
+```
+type key = int
+type 'a btree = 
+  | Empty 
+  | Node of 'a btree * (key * 'a) * 'a btree
+	
+	
+(*ORIGINAL VERSION OF FUNCTION:*)
+let rec findOpt t k = match t with 
+  | Empty -> None
+  | Node(l, (k', _), _) when k < k' -> findOpt l k
+  | Node(_, (k', _), r) when k > k' -> findOpt r k
+  | Node(_, (_ , x), _) -> Some x
+
+
+
+(*Now we want to implement the exceptions that we can to make this code a little cleaner*)
+exception NoSuchKey of key
+exception ErrorMsg of string
+exception BoundExceeded
+
+let rec findEx' t k n = 
+  match t with
+  | _ when n < 0 -> raise BoundExceeded (* this was:  raise (ErrorMsg "Bound exceeded")*)
+  | Empty -> raise (NoSuchKey k)  (*this was: raise (ErrorMsg ("No entry with key " ^ string_of_int k ^ " found in tree"))*)
+  | Node (l, (k', _), _) when k < k' -> findEx' l k (n - 1)
+  | Node (_, (k', _), r) when k > k' -> findEx' r k (n - 1)
+  | Node (_, (_,  x), _) -> x
+```
+
+
+**********************Structured Errors**********************
+General Idea:
+* Define a data type to represent a collection of app-specific errors
+* define a single exception that bundles a value of that type
+
+Now it is easier to handle app-specific errors of a certain type (a praticular function could raise)
+**************************************************************
+This is super cool because its kinda a mix of pattern matching and also defining a new data type
+
+```
+type lookup_error =
+  | BoundExceeded
+  | NoSuchKey of key
+
+exception LookupError of lookup_error 
+
+(* Define a helper for raising lookup errors. *)
+let lookup_error e = raise (LookupError e)
+
+let rec findEx'' t k n = 
+  match t with
+  | _ when n < 0 -> lookup_error BoundExceeded
+  | Empty -> lookup_error (NoSuchKey k)
+  | Node (l, (k', _), _) when k < k' -> findEx' l k (n - 1)
+  | Node (_, (k', _), r) when k > k' -> findEx' r k (n - 1)
+  | Node (_, (_,  x), _) -> x
+	```
+	
+	
+	(* Structured errors give an excellent way to separate the concerns of the program:
+   1. the searching is unobscured by exception handling logic
+   2. the handler logic is parameterized via a higher-order function,
+      so different handling logic can be plugged in as needed.
+   3. by partially applying the handler function, we recover a safe
+      lookup function that performs the already specified error-recovery
+      logic.
+ *)
+
+(* The primary benefit of exceptions:
+   Separating the happy path (e.g. tree searching) from error
+   handling.
+*)
+
+(* This use of exceptions to signal error conditions sugests raising
+   exceptions is fatal: an unhandled exception terminates the program
+   -- but signalling an error is only one use of exceptions! 
+   We can instead use exceptions to construct interesting types of
+   control flow.
+*)
+
+GO OVER ALL THE DIFF EXAMPLES GIVEN IN THE CODE
+
+
+
+
+
+
+
+
+
+
+
+

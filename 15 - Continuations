@@ -1,0 +1,273 @@
+There are many other instances where you want to take charge of control flow:
+	No exceptions
+	
+	
+Simple idea: having an accumulator 
+May not always work as easily -- we might need to work with higher order functions
+Solution: Taking charge of the control flow with higher order functions
+
+
+Continutations are hard!! :(
+
+Definition: 
+A CONTINUATION is a representation of the execution state of a program (for example a call stack) at a certain point in time.
+Idea: save the current state of execution into some object and restore the state from this object at a later point in time resuming its execution.
+
+
+Many languages support continuations...
+Nothing particular ot OCaml or a theoretical idea
+In Ocaml we do not have built in first class support to implement these but we dont really need that
+
+We will look at some of the tail recursive examples:
+
+A function is TAIL RECURSIVE no computation happens after the recursive call (maybe passes the result further up) but usually no. 
+	Our compiler can resuse stack frames, leading O(1) space complexity.
+
+				Can every function be written tail recursively ? ---> YES ! USING CONTINUTATIONS
+																															but we will need to be more careful
+																															
+	
+  Recall :
+	
+	```
+	(*append : 'a list  -> 'a list  -> 'a list *)
+	let rec append l1 l2 = match l1 with
+	| [] -> l2 
+	| h::t -> h :: append t l2
+	```
+	*This is not tail recursive because consing h occurs after the recursive call!!
+	*Still very efficient
+	
+How can we make this tail recursive?
+	
+***********************	General idea: **************************************
+	* Have an additional argument which acts like an acc but it is called a continuation
+	* In the base:  Instead of returning the acc --> we will call the continuation
+	* In the recursive case:  We will build up in the continutation the work to do after the recursive call is done
+*****************************************************************************	
+	
+	We will use a stack of functions to model the call stack = the work we still need to do after the recursive call.
+	
+	
+	This is your recursive call 
+	```
+	let app_tr l1 l2 =
+			let rec app' l1 l2 cont = match l1 with
+			| [] ->  cont l2   																		(*Call the continuation*)
+			| h::t -> 	app' t l2	  		( fun r -> cont (h::r) ) . (* this is in place of cont*)
+			
+			(*We want to build up our call stack = build up continuation = build a 																				function which receives the result r of appending t to l2 and continues  																		to build the final result by:
+																	-cons h to r 
+																	-pass the result (h::t) further up in the call stack (ie. pass it to the c																	cont)*)
+			
+										
+										(*(r: 'a list) -> 'a list*)
+										(*the reason we say this is an 'a list is because we call it with the identity function 										below*)
+			
+			in 
+			app' l1 l2 (fun l -> l)  (*the initial continuation*)
+	
+	```
+	
+	
+	say you have a list 
+	app' [1;2] [3;4;5] (fun l -> l) **** this is the identity function***
+	
+	==> app_tr [2][3;4;5] (fun r -> id (1::r)) **** same as (fun r -> (dun l -> l) (1::r1))
+	==> app_tr [][3;4;5] (fun r -> (fun r -> (fun l -> l)(1::r1))2::r2)
+	BUILDING THE CONTINUATION
+	CALLING THE CONTINUATION in the base case passing [3;4;5]
+	==> (fun r -> (fun r -> (fun l -> l)(1::r1))2::r2) [3;4;5]
+	CONTINUATION (stack of functions) collapses!
+	==>(fun r -> (fun r -> (fun l -> l)(1::r1))(2::[3;4;5])
+	==>(fun r -> (fun r -> (fun l -> l)(1::(2::[3;4;5]))
+	==>1::2::[3;4;5] = [1;2;3;4;5]
+will continue to pass the argument until it is done
+
+
+
+HOW IS THIS DIFFERENT THAN NON TAIL RECURVISE VERSION
+
+app [1;2] [3;4;5]
+==> 1:: app [2][3;4;5] 							on the call stack of ocaml compiler, we store that once we return the 																			result app [2][3;4;5] and we cons 1 to that result
+==> app [2][3;4;5]                on the call stack of ocaml compiler, we store that once we return the 																			result app [][3;4;5] and we cons 2 to that result
+==> app [][3;4;5]
+
+*so the non recursive one is O(n) and the recursive one is O(1) SPACE!!!
+*they both use O(n) memory, but it's the type of the memory that is different.
+				*append uses the stack which is not v big
+				*app_tr uses the heap which is bigggggggg 
+* append will outperform app_tr on small lists, on very large lists, app will crash
+*the use of continuations in the form of CLOSURES (functions capturing an environment) ncurs an extra time and space penalty
+
+
+```
+let rec genList n acc =
+if n >0 then genList (n-1)(n::acc) else acc;;
+
+let l1 = genList 8000000 []
+let l2 = genList 4000000 []
+```
+	WHEN SHOULD WE USE CONTINUATIONS?
+	*Tail recursion: the continuation is a functional accumulator; it represents the call stack built when recursively calling a function and build the final result
+	*FAILURE CONTINUATION: the continuation keeps track of what to do upon failure and defers control to the continuation
+	*SUCCESS CONTINUATION: the continuation keeps track of what to do upon success, defers control to the continuation and builds the final result
+
+
+
+
+
+
+
+
+
+```
+let rec sum_tr l acc = math l with 
+|[] -> acc
+|h::t -> h + sum_tr t
+```
+sum_tr [1;2;3] 0
+==> sum_tr[2;3] (1+0)
+==> sum_tr[3] (2+1+0)
+==> sum_tr[] (3+2+1+0)
+==> 6
+
+
+``` 
+let sum l = match l with 
+|[] -> 0
+|h::t -> h + sum t
+```
+
+
+
+	IMISSED HER GOING OVER THESE TWO EXAMPLES
+	TOOK PIC
+	
+	
+	
+	
+	```
+	let rec map l = match l with 
+|[] -> []														(*the empty list gets glued into the call stack -- passing empty list*)
+|h::t -> (f h)::map t f
+```
+```
+let rec map' l f acc = match l with
+|[] -> acc
+|h::t -> map' l f ((f h)::acc)
+```
+
+this is not a good program becasue you would keep appending
+but we can write it tail recursively to fix this problem
+	
+	
+	
+(*map_tl : 'a list -> ('a list -> 'b list) 
+						-> ('b list -> 'b list)
+						-> 'b list
+*)
+	
+let rec map_tl l f c = match l with
+| [] -> c[]											(*we want to call the cont with the empty list - pass the result of the 																		base case to cont	*)
+| h::t -> 
+		map_tl t f (fun t' -> cont((f h)::t') .     
+		
+		so basically ...?
+
+
+	
+	
+	We also notice that - on this call stack it has also it has a recursive call to the right sde so it is much more complex than just traversing a list
+	We didnt write this very nicely, we just threw exceptions
+	
+	WE rely on the exception handler facilities and trust that they would know how to jump back to the correct side of the tree 
+	The price of using exceptions is piggy backing on the capabilities of the exception handler of Ocaml
+	
+	Continutations are a way for us to build our own call stack - we put in ther any work that still needs to be done. 
+	
+	
+	
+	
+	************************************************************************************
+	Traversing a tree and finding an element
+	
+	```
+	type 'a tree =
+	|Empty
+	|Node of 'a tree = 'a * 'a tree
+	
+let leaf n = Node (Empty, n, Empty)
+let r = Node (leaf 22, 35, leaf 70)
+let l1 = Node (leaf 3, 5, leaf 7)
+let l = Node(l1, 9, leaf 15)
+Let t = Node(l, 17,r)
+
+
+
+
+																			17
+																		/			\
+																	/					\
+																/							\
+															9									33
+														/		\								/	\
+													/			  \						/			\
+												5					15				22				44
+											/		\
+										3				7
+	*******Version 1: Using Option Types********
+	(* find : ('a -> bool) -> 'a tree -> 'a option*)
+	
+	let rec find p t = match t with
+	|Empty -> None
+	|Node (l,d,r) -> 
+									if (p d) then Some d
+									else (match find p l with 
+											|None -> find p r
+											|Some d' -> Some d')
+											
+											
+											
+	*******Version 2: Exceptions********
+						
+exception fail
+(*find_ex : ('a -> bool) -> 'a tree -> 'a option *)
+
+let rec find_ex p t = match t with
+|Empty -> None
+|Node (l,d,r) -> 
+							if (pd) them Some d
+							else (try find_ex p l with Fail -> find_ex p r)
+							
+							
+	let find' p t=
+	(try find_ex pt with Fail -> None)
+	
+	
+	*******Version 3: Failure continuation********
+	(*find_cont: ('a -> bool) -> 'a tree
+								->(unit -> 'a option)
+								-> 'a option 
+								*)
+								
+	let rec find_cont p t fc = match t with 
+	|Empty -> fc()							(*Call continuation*)
+	|Node (l,d,r) ->
+		if p d then Some d
+		else find_cont p l (fun () -> find_cont p r fc)
+		
+let findc p t = find_comt p t (fun () -> None)
+	
+	(*
+	find_cont (fun d -> d = 15) t (fun() -> None)
+	==> find_cont p l (fun() -> find_cont p r (fun()-> None))
+	==> find_cont p ll (fun() -> find_cont p lr (fun()-> find_cont p r (fun () -> None)))
+	==>find_cont p (Node(Empty,3,Empty)
+			(fun()->
+						find_cont p (Node(Empty, 7, Empty))
+								(fun () ->
+													find_cont p lr  (fun () -> find_cont......
+	*)
+	
+	

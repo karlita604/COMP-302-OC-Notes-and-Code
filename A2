@@ -1,0 +1,125 @@
+exception NotImplemented
+
+(* The type of binary numbers. *)
+type bnum =
+  | E
+  | Zero of bnum
+  | One of bnum
+
+(* The type of propositions. *)
+type prop =
+  | Atom of string
+  | Neg of prop
+  | Conj of prop * prop
+  | Disj of prop * prop
+  | Impl of prop * prop
+                                                                                                                
+(* TODO: Write a good set of tests for psum. *)
+let psum_tests = [
+  ([],[]);
+  ([1;2;3], [1;3;6]); 
+  ([3],[3]);
+  ([1;1;1;1], [1;2;3;4]);
+  ([0;0;0;0],[0;0;0;0]);
+  ([0;1;0;1],[0;1;1;2]);
+  ([4;3;2;1], [4;7;9;10]);
+  ([2;4;6;8],[2;6;12;20]);
+  ([0;1;-1;4],[0;1;0;4]);
+]
+
+(* TODO: Implement psum. *) 
+
+let rec psum l = match l with
+  |[] -> []
+  |[x] -> [x]
+  |(h1::h2::t) -> h1 :: (psum ((h1 + h2)::t));;
+
+
+(* TODO: Write a good set of tests for intToBin. *)
+let intToBin_tests = [ 
+  
+  (0,E);
+  (1, (One E));
+  (6,Zero (One (One E))); 
+  (5, One (Zero (One E))); 
+  (8, Zero (Zero (Zero (One E))));
+  (9, One( Zero (Zero (One E))));
+  (23, One (One(One (Zero (One E)))));
+  (7, One(One(One E))); 
+  (3, One(One E));
+  (1000, Zero (Zero (Zero (One (Zero (One (One (One (One (One E))))))))));
+  
+  
+] 
+(* TODO: Implement intToBin. *)
+let rec intToBin n = match n with
+  |0 -> E
+  |1 -> (One E) 
+  |n -> if (n mod 2 = 0)
+      then (Zero (intToBin (n/2)))
+      else (One (intToBin (n/2)));;
+  
+  
+
+(* TODO: Write a good set of tests for binToInt. *)
+let binToInt_tests = [
+  ((Zero E),0);
+  (E, 0);
+  (Zero (One (One E)), 6); 
+  (One (Zero (One E)), 5); 
+  (Zero (Zero (Zero (One E))), 8);
+  (One( Zero (Zero (One E))), 9);
+  (One ( One( One (Zero (One E)))), 23); 
+  ((One E),1);
+  
+  
+]
+
+(* TODO: Implement binToInt. *)
+let rec binToInt b =
+  match b with
+  | (One E) -> 1
+  | (Zero E) -> 0
+  |Zero (x) -> 2 * (binToInt x)
+  |One (x) -> 2 * (binToInt x) + 1
+  |(E) -> 0 (* you need brackets here*);;
+    
+
+
+
+
+(* TODO: Write a good set of tests for nnf. *)
+let nnf_tests = [
+  
+  (Neg (Conj (Atom "p", Disj (Atom "q", Atom "r"))), Disj (Neg (Atom "p"), Conj (Neg (Atom "q"), Neg (Atom "r"))));
+  (Neg (Disj (Atom "q", Atom "q")), Conj(Neg(Atom "q") ,(Neg(Atom "q"))));
+  (Neg(Neg(Atom "p")), Atom "p");
+  (Conj(Atom "p", Disj(Atom"q", Neg(Atom"r"))), (Conj (Atom "p", Disj (Atom "q", Neg (Atom "r")))));
+  (Neg (Conj (Atom "q", Atom "q")), Disj(Neg(Atom "q") ,(Neg(Atom "q"))));
+  (Impl (Atom "p", Atom "q"), Disj(Neg(Atom "p"), Atom"q"));
+  (Neg(Impl (Atom "p",Atom "q")), Conj(Atom"p", Neg(Atom "q")));
+  (Atom "p", Atom "p");
+  (Neg(Atom"p"), Neg(Atom "p"));
+  (Neg (Impl ((Neg(Atom "p")), Atom "q")), Conj (Neg (Atom "p"), Neg (Atom "q"))); 
+  (Atom "", Atom"");
+  (Neg (Disj (Atom "q", Atom "q")), Conj (Neg (Atom "q"), Neg (Atom "q")) );
+  (Neg (Neg(Neg(Atom "p"))), Neg (Atom "p"));
+  (Neg (Conj (Neg(Neg(Atom "q")), Atom "q")) , Disj (Neg (Atom "q"), Neg (Atom "q")));
+  (Neg(Neg(Impl (Neg(Atom "p"),Atom "q"))) , Disj (Atom "p", Atom "q"));
+  
+  
+]
+
+(* TODO: Implement nnf. *)
+let rec nnf p = match p with
+    (*| (Atom(_) | Neg(Atom(_))) as expr -> expr *)
+  | Atom x -> Atom x
+  | Neg ( Atom x ) -> Neg (Atom x) 
+  | Neg(Neg(x)) -> nnf x 
+  | Neg(Conj(expr1, expr2)) -> nnf (Disj(Neg(expr1),Neg(expr2))) 
+  | Neg (Disj (expr1, expr2)) ->  Conj(nnf(Neg(expr1)),nnf(Neg(expr2))) (*Should change to Conj(nnf expr1, nnf expr2)*)
+  | Disj(expr1, expr2) -> Disj(nnf expr1, nnf expr2)
+  | Conj(expr1, expr2) -> Conj(nnf expr1, nnf expr2) 
+  |Impl (expr1, expr2) -> Disj ((nnf (Neg expr1)) ,( nnf expr2))
+  |Neg (Impl (expr1,expr2)) -> nnf (Conj (expr1, (Neg expr2)))
+                                 

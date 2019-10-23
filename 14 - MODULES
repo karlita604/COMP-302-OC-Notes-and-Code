@@ -1,0 +1,172 @@
+Interesting to note that languages such as Java, C#, C++, Python, etc. have all adopted syntax or some aspects of functional programming! It is clear that the future of programming lies in the functional languages that we use today.
+
+**********MODULES**********
+
+Primary benefits:
+* Split large programs into separate pieces
+* Create new namespaces
+* Create new abstractions
+* Programs are easier to maintain and reuse
+
+
+Abstractions may be used to create two isomorphic but incompatible views of a same structure. For exaple all currencies can be represented by floats, but not all currencies should be mixed or used together (incompatible). 
+Currencies are isomorphic but disjoint structures, with respective incompatible units Euro and Dollar. this is modeled in Ocaml by a signature constraint/module type.
+
+Remark that multiplication became an external operation on floats in the signature CURRENCY. Constraining the signature of Float to be CURRENCY returns another, incompatible view of Flaot. Moreover, repeating this operation returns two isomorphic structures but with incompatible types.
+
+
+```
+module type CURRENCY = 
+sig 
+  type t 
+  val unit : t 
+  val plus : t -> t -> t 
+  val prod : float -> t -> t 
+  val toString : t -> string
+end;;
+
+module Float = 
+struct 
+  type t = float 
+  let unit = 1.0 
+  let plus = (+.) 
+  let prod = ( *. ) 
+  let toString  x = string_of_float x
+end;;
+
+module Euro = (Float : CURRENCY);; 
+module Dollar = (Float : CURRENCY);;
+```
+
+In Float the type t is concrete, so it can be used for "float". Conversely, it is ABSTRACT IN EURO AND DOLLAR MODULES. This means that Euro.t and Dollar.t are incompatible
+
+```
+let euro x = Euro.prod x Euro.unit;; 
+let x = Euro.plus (euro 10.0) (euro 20.0);
+Euro.toString x;;
+###- : string = "30."
+Euro.toString (Euro.plus (euro 10.0) (Dollar.unit));;
+                                       ^^^^^^^^^^^^^
+###Error: This expression has type Dollar.t
+       but an expression was expected of type Euro.t
+```
+This is super awesome because then we cannot mix units.
+
+
+Let us now do the bank example. Let us define a bank with clients which is a data structure (?) which is also applicable to anywhere in the world. The current currency is opaque.
+
+```
+module type CLIENT = (* client's view *)
+sig 
+  type t 
+  type currency 
+  val deposit : t -> currency -> currency 
+  val retrieve : t -> currency -> currency 
+end;; 
+
+module type BANK = (* banker's view *) 
+sig 
+  include CLIENT   (* BANK inherits all the values declared in the
+		      signature CLIENT ; 
+		      if we subsequently declare names which already
+		      are declared in CLIENT we are overshadowing the
+		      previous names.
+		   *)
+  val create : unit -> t 
+end;;
+```
+
+	WHAT IS THE DIFFERNCE BETWEEN MODULE AND MODULE TYPE	
+I think that module type is when you are defining a completely new type and module becomes a new type but made of the types that you already have (composition? not quite)
+
+
+
+```
+module Old_Bank (M : CURRENCY) : (BANK with type currency = M.t) = 
+struct 
+  type currency = M.t 
+  type t = { mutable balance : currency } 
+
+  let zero = M.prod 0.0 M.unit 
+  and neg = M.prod (-1.0) 
+  
+  let create() = { balance = zero } 
+
+  let deposit c x = 
+    if x > zero then 
+      c.balance <- M.plus c.balance x; 
+      c.balance 
+  
+  let retrieve c x = 
+    if c.balance > x then 
+      deposit c (neg x) 
+    else 
+      c.balance 
+end;; 
+```
+
+```
+module Post = Old_Bank (Euro);; 
+module Client : (CLIENT with type currency = Post.currency and type t = Post.t) = Post;;
+module Citybank = Old_Bank (Dollar);; 
+
+let my_dollar_account = Citybank.create()
+
+Citybank.deposit my_account;; 
+Citybank.deposit my_dollar_account (euro 100.0);;
+
+module Bank (M : CURRENCY) : (BANK with type currency = M.t) = 
+struct 
+  let zero = M.prod 0.0 M.unit 
+  and neg = M.prod (-1.0) 
+  
+  type t = int 
+  type currency = M.t 
+  type account = { number : int; mutable balance : currency } (* bank database *) 
+
+  let all_accounts = Hashtbl.create 10 
+  and last = ref 0 
+
+  let account n = Hashtbl.find all_accounts n 
+
+  let create() = 
+    let n = incr last; !last 
+    in 
+    Hashtbl.add all_accounts n {number = n; balance = zero}; 
+    n 
+
+  let deposit n x = 
+    let c = account n in 
+    if x > zero then 
+      c.balance <- M.plus c.balance x; 
+      c.balance 
+
+  let retrieve n x = 
+    let c = account n in 
+    if c.balance > x then (c.balance <- M.plus c.balance x; x) else zero 
+
+end;; 
+
+(* Using functor application we can create several banks. As a result of generativity of function application, they will have independent and private databases, as desired. *)
+    	 	
+module Central_Bank = Bank (Euro);; 
+module Banque_de_France = Bank (Euro);;
+
+(* Furthermore, since the two modules Old_bank and Bank have the same interface, one can be used instead of the other, so as to created banks running on different models.
+*)
+ 	 	
+module Old_post = Old_Bank(Euro) 
+module Post = Bank(Euro) 
+module Citybank = Bank(Dollar);;
+
+(* All banks have the same interface, however they were built. In fact, it happens to be the case that the user cannot even observe the difference between either implementation; however, this would not be true in general. Indeed, such a property can not be enforced by the typechecker. *)
+
+```
+
+
+
+
+
+
+
+

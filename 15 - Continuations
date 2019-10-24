@@ -271,3 +271,41 @@ let findc p t = find_comt p t (fun () -> None)
 	*)
 	
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let find_path g a b =
+  let rec aux_node node visited =
+    if node = b then [[node]]
+    else if CharSet.mem node visited then []
+    else
+      let edges = CharMap.find node g in 
+      let m = CharSet.add node visited in
+      List.fold_left (fun acc c -> List.rev_append (collect c m)acc) [] edges |>List.map (fun x -> node :: s)
+  in
+  collect a (CharSet.empty) 

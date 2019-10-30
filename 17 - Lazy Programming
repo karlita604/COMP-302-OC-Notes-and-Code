@@ -1,0 +1,282 @@
+Eager vs Lazy 
+
+Eager = strict evaluation aka call-by-value:
+
+Arguments are evaluated before function application
+
+```
+let x = e1
+let y = e2
+f x y
+```
+THat means all variables are bound to values -- int, string, another function 
+--- let happens first!
+
+example ```
+let x = 3+2
+
+
+
+Another eaple 
+``` let x = horribleComp 345 in 5 ```
+where horribleComp takes several minutes to compute some value
+
+can we skip this horrible computation of 345?? YES! 
+in general that is what lazy evaluation attempts to do
+
+before we go to lazy, we will go over partial evalutation:
+
+```
+let test x y = 
+	let w = horribleComp x in
+	w + y
+```
+
+let us partiallt evaluate test 10 and test 5
+
+``` 
+let test10 = test 10;;
+	-- val test10 : int -> int = <fun>
+let test5 = test 5;;
+	-- val test5 : int -> int = <fun>
+```
+
+This is not more efficient because the what is inside the function will not be touched until we are given the y. We only evaluate the body of a function when we call it.
+
+Now let us try 
+```
+let test10 = test 10;;
+```
+
+
+THE UNUSUAL EFFECTIVENESS OF PARTIAL EVALUATION`
+
+EAGER COMPUTATION:
++ easier to reason about
++clear when the evaluation happens
++ clear what the runtime of the program will be
+- may evaluate extressions that are never needed
+
+~~~~~~~~~~~~~LAZY COMPUTATION:~~~~~~~~~~~~~~~~~~~~~
+Would only evaluate when it is needed.
+
+example```
+let x = horribleComp(345) in x+x
+```
+ 
+ Naive implementation:
+ 1. associate x -> horribleComp 345 (not evaluated yet)
+ 2. evaluate x+x to horribleComp 345 + horribleComp345
+ 		- evaluate horribleCOmp 345 to a value 777
+		- Reassociate x -> 777
+		Use the value 777 for x to evaluate x+x
+		
+What about unused variables?
+let x = horribleComp 345 in 5 
+
+Is is nice to have eager computation, but how do we ensure that things that arent needed at that moment are suspended and can be looked at and evaluated at later point
+Solution: suspending
+
+```
+type 'a susp = Susp of (unit -> 'a)
+let force (Susp f) = f ()
+```
+Do not evaluate an inside function!
+
+Consider:
+let x = Susp (fun () -> horribleComp 345) 
+
+let x = Susp (fun() -> horrible Comp 345)
+in (force x) + 5
+
+
+
+
+
+
+
+functions already allow us to partially suspend computation.
+
+
+
+
+
+
+
+
+lazy computation is demand-driven
+ -- we don't only want to delay horrible comp to a different point in time , but we want to represent interactive data (processes on the web)
+ 
+ 	- Harder to 
+	
+	
+	
+	
+Finite Data -- inductive data type 
+
+type 'a list = 
+|Nil 
+|Cons of 'a * a list
+
+Encodes an inductive definition of finite lists
+ * Nil is a list of type 'a list
+ * If x is of type 'a and xs
+ 
+ 
+ 
+ 
+------ Infinite Data ------
+ Infinite data is not defined by constructors... but instead by the observations we can make on it
+ Not something we can construct.. one by one element.
+ Rather we start with all possible lements and although we dk what it looks like we make observations about it.
+ 
+ Given and (inf) stream 1,2,3,4,... we can ask for the 
+ 	*head of the stream, obtaining 1
+	* the tail of the stream, obtaining 2,3,4,5...
+	
+Looping and Divergence --- non termination
+These strings are also non-terminating.  -- continue to ask for head and tail and it will always supply an answer
+
+-----Streams ----
+type 'a str = 
+{ hd : 'a ;
+  tl : ('a str) susp }
+  
+  Encodes a coinductive difinition of infinite streams using the two observations hd and tl
+   	-- asking for the head using the observations
+
+Lets see what this means in practivce
+
+
+```
+
+
+type 'a susp = Susp of (unit -> 'a)
+(* force: *)
+let force (Susp f) = f ()
+
+
+type 'a str = {hd: 'a  ; tl : ('a str) susp}
+
+
+(* Stream of 1, 1, 1, 1, ... *)
+(* ones : int str *  *)
+
+let rec ones = {
+  hd = 1;
+  tl = Susp(fun() -> ones)
+}
+
+
+
+
+(*------------ take: int -> 'a str -> 'a list *)
+(*it takes off n elements from the input stream and puts them in a list in same order*)
+
+
+let rec take n s - if n = 0 then []
+else s.hd :: (take (n-1) (force s.tl))
+
+(* take 3 { hd : 1 ; tl = Susp(fun() -> ones)}
+==> 1 :: (take 2 (force (Susp(fun () -> ones)))
+==> 1 :: (take 2 ((fun () -> ones) ())
+==> 1 :: (take 2(ones)
+==> lkfjalkdfalf;a
+*)
+
+
+
+(* Recursive function returning a stream dropping the first n elements from stream s
+val stream_drop : int -> 'a str -> 'a str *)
+(* numsFromL int -> int str*)
+(*as the head, we want to return whatever n was given
+in the tail, we need to create a suspended computation
+and it will compute another record, and the next head returned will be n+1*)
+
+let rec numsFrom n = 
+{ hd = n;
+  tl = Susp (fun () -> numsFrom (n+1))
+}
+(* the recursive call is guarded by the observation tail and it is indeed properly suspended*)
+
+let nats = ???
+
+
+let rec power n k = 
+if k = 0 then 1 else n * powern (k-1)
+
+let rec power_series n k = 
+{ hd : 1;
+  tl = Susp( fun() -> power_series (n*k) k) }
+(*
+take 4 (power_series 1 2)
+*)
+
+
+
+lets write the map function
+
+let rec smap f s =
+{ hd = f (s.hd);
+  tl = Susp (fun () -> smap f( force s.tl))
+}
+
+let rec find p s = if p s.hd then (s.hd, s.tl) else find p (force s.tl)
+
+let rec sfilter p s = 
+let (h,t) = find p s in 
+{ hd = h;
+  tl = Susp (fun () ->  sfilter p (force t))}
+  
+  
+  
+  Sieve of Eratosthenes for prime numbers 
+  2 3 4 5 6 7 8 9 10 11 12 13 15 ...
+
+Return 2 as prime
+Next iteration  -- filter out all the numbers divisable by 2
+ 
+  3 5 7 9 11 13 ...
+  
+Return 3 as prime
+Filter out all the multiples of 3
+
+  5 7 11 13 ...
+  
+  
+ let no_divider m n = not (n mod m = 0)
+ let rec sieve s = 
+ { hd = s.hd;
+   tl = Susp(fun() -> sieve (sfilter (no_divider s.hd) (force s.tl)))}
+
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+How to suspend and prevent evaluation of an expression?? 
+
+
+
+
+		
+ 

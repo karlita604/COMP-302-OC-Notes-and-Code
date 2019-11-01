@@ -1,0 +1,229 @@
+The iddea in lazy programming is to work with infinite data -- 
+  trees are fully contructed 
+  list with cycles are not fully constructed 
+  
+  When we want ot work with this data - how do we want to represent it?
+  Define infinite data by the observations we make about it.
+  
+Givena stream 1,2,3,4,5,... we ask for 
+		the head of the stream : 1
+		the tail of the stream : 2,3,4,5,...
+		
+		We can ask for more and it will give us more.
+		
+		Program should remain productive!!! each observation gives an answer in finite time
+		
+		The key to this is to use functions! 
+		
+We are going to recap and see how we would use this for streams. Then we will look at fibonacci and then how to make lazy lists.
+
+-------------------Easy computation vs Eager computation-------------------
+
+In our naive approach we evaluate the delayed computation by forcing it even if we do not need it. If we want to make out computations actually lazy we should have a way of remembering ...
+
+
+				---Recap: streams---
+
+```
+type 'a str = 
+{ hd : 'a;
+	tl : 'a str susp
+}
+```
+Encodes a coinductive definition of infinite streams using the two
+observations hd and tl.
+
+
+
+EXAMPLE . (* Sequence 1 , 1/2, 1.4, 1.16 ,... *)
+```
+let rec geom_series x = 
+{ hd = 1.0/x;
+	tl = Susp( fun() -> geom_series (x *. 2.0))
+}
+```
+// I don't understand why it is x *. 2.0
+
+EXAMPLE (* zip : ('a -> 'b -> 'c) -> 'a stream -> 'b stream -> 'c stream *)
+How do we proceed? it is not by patternmatching but it we need to describe what the head is and what the tail is.
+(*
+s1 == a1 a2 a3
+s2 == b1 b2 b3
+zip f s1 s2 = (f a1 b1) (f a2 b2) ....
+*)
+
+```
+let rec zip f s1 s2 =
+{ hd : f s1.hd s2.hd ;		//you are grabbing the first element from the sequences
+	tl : Susp (fun () -> zip f (force s1.tl) (force s2.tl))
+}
+```
+How would we use zip to add two streams together??
+
+```
+let rec add_str s1 s2 =
+	zip (f a b -> a+b) s1 s2
+```
+
+
+HOW WOULD WE COMPUTE THE FIBONACCI SEQUENCE
+
+0,1,1,2,3,5,8,13,21,34,... recall that the next number is found by adding up the two numbers before it.
+
+fibs = 0		1		1		2		3		5		...
+			 +		+		+		+		+		+
+fibs'= 1		1		2		3		5		8		...
+
+adding the columns gets you the next number in fibs'
+
+The idea is to zip fibs with fibs tail (= fibs')
+
+```
+fibs() = 0 1 add (fibs(), tl (fibs())) -- it is almost what we can write in OCaml using observations.
+Construct a stream of the fibonacci numbers ---
+ROUGHLY 
+a			b			Fib Stream
+0...  1...  0,...
+1...  1...  0,1,...
+1...  2...  0, 1, 1,...
+
+(* fibs : int str
+	 fibs': int str 
+*)
+
+```
+let rec fibs =
+{ hd = 0;
+	tl = Susp ( fun() -> fibs' )
+}
+and fibs' = 
+{ hd = 1;
+	tl = Susp (fun () -> zip (+) fibs fibs')
+}
+```
+
+fibs.hd ==> 0
+
+
+------------------------------------------------------------------
+How could we define an infinite tree? We could have "two tails" 
+Since there are three parts to define a tree, we could jsut make those infinite
+------------------------------------------------------------------
+
+		MOVING ONTO FINITE DATA STRUCTURES -- computed (NOT eagerly) but incrementally as we move along
+		
+The type that we want to define is a lazy list:
+
+```
+type 'a lazy_list =
+{hd : 'a ; tl : ( 'a fin_list ) susp}
+and 'a fin_list =
+|Empty
+|NonEmpty of 'a lazy_list
+```
+
+(*
+{ hd = 1;
+	tl = Susp (fun() -> Empty)
+}
+
+{ hd = 1;
+	tl = Susp (fun() -> NonEmpty { hd = 2; tl = Susp (fun () -> Empty)}
+}
+*)
+
+
+You have to find this lazy list with this recursive pattern -- then we need to do mutually recursive pattern
+
+```
+(* tale : int -> 'a lazy_list -> 'a lazy_list*)
+let rec take n s =
+	if n = 0 then []
+	else s.head :: take' (n-1) (force s.tl) .  //WHY DO WE FORCE 
+	(* take' : int -> 'a fin_list -> 'a lazy_list *)
+	and take' n s = match s with
+	| Empty -> []
+	| NonEmpty ll -> take n ll
+	
+	
+	
+	(* natsFrom : int -> int lazy_list*)
+let rec natsFrom = 
+{
+hd : n;
+tl : Susp (fun () -> natsFrom' (n-1))
+}
+
+and natsFrom' n = 
+if n = 0 then Empty
+else NonEmpty (natsFrom n) 		//because we have already decreased in the program above
+```
+
+
+LETS WRITE MAP 
+(*map : ('a -> 'b) -> 'a lazy_list ->'b lazy_list *)
+
+```
+let rec map f s = 
+{ hd = f s.hd;
+	tl = Susp (fun () -> map' f (force s.tl))
+}
+and map' f l = match l with 
+| Empty -> Empty
+| NonEmpty s -> NonEmpty (map f s)
+
+
+
+
+
+
+
+
+
+
+
+\one of the things we may want to do is interleave a particular element into the list
+
+(*
+interleave : int -> int list -> (int list) lazy_list
+
+interleave 1 [2;3;4]
+==> [1;2;3;4] [2;1;3;4] [2;3;1;4] [2;3;4;1]... (this represented as a lazy list of int list)
+*)
+	
+	
+```
+let rec interleave (x:int) (l: int list) = match l with
+| [] -> { hd = [x];
+					tl = Susp (fun () -> Empty)
+				}
+| y::ys ->    
+
+(*
+we are at least havving a list [2;3] = 2::[3]
+1::2::3 
+*)
+
+{ hd = x::l ;
+						 tl = Susp ( fun() -> NonEmpty (map (fun l -> y::l) interleave  )
+						}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type 'a sus = Susp of (unit -> 'a)
+				this is a suspended computation
+			

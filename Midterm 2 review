@@ -1,0 +1,178 @@
+Midterm is Monday -- you may have a cribsheet 
+
+
+
+let rec f b l = match l with
+|[] -> b
+|x::xs -> f x
+
+a) 'a -> 'a list -> 'a
+b) ('a -> 'b) -> 'a -> 'a list -> 'b 			IT CANNOT BE THIS BECAUSE THIS IS SAYING THAT IT TAKES IN 3 ARGS 
+c) ill-typed
+d) int -> int list -> int 
+
+what would be the result of f x --> function ! f x -- what is the type = 'a list -> 'a 
+this means that it is incompatible because we are expecting a different type.
+
+
+
+let rec f x = f (f x) in (f true, f 1)
+What is the most general type of this expression?
+
+a) bool*int
+b) ill typed
+c) stack overflow? loop recursion?
+
+What is the type of f? 'a -> 'a 
+Whatever it produces then it takes it back in which means that input type = output.
+and so takes in some 'a and then it 
+It is a polymorphic function because it makes no claims as to what the type of x is. ---- 'a -> 'a
+This is why you can call f true and f 1 --> will return a tuple of bool*int -- STATICALLY 
+But when you run it you would get a stack overflow
+
+
+
+What is the most general type of the following expression
+let f x y = if x > 0 then x = y else y = x
+
+a) int -> int -> unit
+b) int -> int-> bool
+c) ill type
+
+
+
+
+
+
+
+type checking example 3 :
+
+let f x y = if x > 0 then x = y else y = x
+
+let x = ref (3*2) in 
+let r = x in 
+let f 
+	let r = ref 4 in
+	let a = !x *2 in 
+		fun u ->
+			x:= 1;
+			u + !x + a + !r
+			
+		in
+		let x = ref 7 in 
+		let a = 10 in
+		x :=2;
+		f(!r *a)
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		STACK	
+																												+-----+
+																									----> || 2 ||
+																								 | 		  +-----+
+																								 |		 																						 
+		+--------------------+--------------------+	 |		 +-------------------------------+
+		|				a						|				10						|  |		 || u | x:= 1;	u + !x + a + !r		|
+		+--------------------+--------------------+	 |		 +-------------------------------+
+		|				x 					 |     				--------|--|		 | a  | 12 . |																					 
+		+--------------------+--------------------+					+---------+				+-----+
+		|				f						 |     				--------|------> || r | 	--|--->   |  4  |
+		+--------------------+--------------------+					+---------+				+-----+
+		|				r						 | 						--------|------> 
+		+--------------------+--------------------+        +========+
+		|				x 					 | 						--------|------> ||	6			| . *** this will be updated to 1 and erasing 6****
+		+--------------------+--------------------+        +========+
+
+
+f (6*10 ) = f (60)
+===> 60 + 1 + 12 + 4 = 77
+
+When you bind something to a value it only sees the past it doesnt see the future
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type counter =
+{freshVar : string -> string;
+ reset : unit -> unit }
+ 
+ let counter_obj = 
+ 		let counter = ref 0 in 
+		{freshVar = (fun x -> let _ = counter := !counter+1 in    THIS RETURNS A VALUE UNIT AND AS AN EFFECT IT WILL UPDATE COUNTER
+															x ^ string -of_int (!counter))
+			reset = (fun () -> counter := 0)}
+			
+let c = counter_obj
+
+
+suppose we evaluate c.freshVar "y"
+what is returned what effects if any took place? 
+		
+		
+THE EFFECT THAT TOOK PLACE WAS THAT THEMEMORY CELL CALLED COUNTER WAS UPDATED? THE NEW VALUE IS NOW 1 , WHEN IT WAS PREVIOUSLY 0. WHAT WILL IT RETURN? --> y1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+We should do some examples with continuations
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

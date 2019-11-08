@@ -1,0 +1,46 @@
+
+***** CHAPTER ONE : BASIC CONCEPTS IN FUNCTIONAL PROGRAMMING *****
+
++ Statically Typed Functional Programming Language 
+
+		+ EXPRESSIONS -- FUNCTIONS: functions compute a result by manipulatiing and analyzing 																		values recursively
+		+ These types of languages are really famous because they like to use pattern matching
+									-- this usually results in effect- free programming. no explicit memory is 											 allocated or stored -- no exceptions automatically divert control flow.
+									-- do not support "pure" effects. because it handles both exception handling 											and state-full computation - impure fucntional language.
+									
+		+ STATICALLY TYPED -- types approzimate the runtime behaviour before the program actually 													runs.
+											 -- Is very fast. Can also give very precise error messages as to where 													to locate the problem. 
+											 -- Very conservative -- will check code statically based only on its 														syntatic structure checking whether the given program can do stuff
+											 -- if the type check suceed we are guaranteed that running the program 													will not lead to a core dump or crash 
+											 
+											 
+ ~ Expressions, Names, Values and Types
+ 
+ + <name> : <type> = <value> 
+ + If we do not bind a resulting value to a name, then Ocaml will just fill in the space with _
+ + Names are useful when we want to call on variables 
+ 
+ FLOATING POINTS
+ + We have a different et of operators when it comes to floating point numbers
+ + Ocaml does not keep any types during runtime, too expensive
+ 
+ + STANDARD BASE TYPES : strings, characters, booleans
+ + Attempting to divide by 0 will pass the type checker, ebcause the type checker just checks whether the two arguments given tot he division operator are integers But it triggers an exception.
+ 
+ 
+ ~ Variables, Bindings and Functions
+ 
+ + Variables and Scope of variables are important for this course. 
+ + We can declare a variable at the very TOP-LEVEL : "let ..." 
+ + We bind values to variable names! NOT EXPRESSIONS
+ + the binding is simply a relation, and it cannot be changed. It can be OVERSHADDOWED
+ + Bindings happen in the stack. Always look at the binding that is at the top, that is not overshaddowed.
+ + SCOPED VARIABLE BINDING -- local bindings happen ... let <name> = <expr 1> in <expr 2>
+ + we bind the value of expr1 to the name and continue to evaluate expr 2 using the new binding. the binding mentioned ends after the let expression and the binding is removed from the binding stack
+ 
+ 
+~ Datatypes and Pattern Matching ~
+
+
+ 
+		

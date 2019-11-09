@@ -3,15 +3,15 @@
 
 + Statically Typed Functional Programming Language 
 
-		+ EXPRESSIONS -- FUNCTIONS: functions compute a result by manipulatiing and analyzing 																		values recursively
+		+ EXPRESSIONS -- FUNCTIONS: functions compute a result by manipulatiing and analyzing values recursively
 		+ These types of languages are really famous because they like to use pattern matching
-									-- this usually results in effect- free programming. no explicit memory is 											 allocated or stored -- no exceptions automatically divert control flow.
-									-- do not support "pure" effects. because it handles both exception handling 											and state-full computation - impure fucntional language.
+									-- this usually results in effect- free programming. no explicit memory is allocated or stored -- no exceptions automatically divert control flow.
+									-- do not support "pure" effects. because it handles both exception handling and state-full computation - impure fucntional language.
 									
-		+ STATICALLY TYPED -- types approzimate the runtime behaviour before the program actually 													runs.
-											 -- Is very fast. Can also give very precise error messages as to where 													to locate the problem. 
+		+ STATICALLY TYPED -- types approzimate the runtime behaviour before the program actually runs.
+											 -- Is very fast. Can also give very precise error messages as to where to locate the problem. 
 											 -- Very conservative -- will check code statically based only on its 														syntatic structure checking whether the given program can do stuff
-											 -- if the type check suceed we are guaranteed that running the program 													will not lead to a core dump or crash 
+											 -- if the type check suceed we are guaranteed that running the program will not lead to a core dump or crash 
 											 
 											 
  ~ Expressions, Names, Values and Types
@@ -39,8 +39,205 @@
  + we bind the value of expr1 to the name and continue to evaluate expr 2 using the new binding. the binding mentioned ends after the let expression and the binding is removed from the binding stack
  
  
-~ Datatypes and Pattern Matching ~
+ ~ Datatypes and Pattern Matching
 
++ Define a finite, unordered collection of elements using a non-recursive datatype definition
+
+type suit = Clubs | Spades | Hearts | Diamonds
+
++ these constructors are of the type suit
++ Unordered
++ Each constructor must begin with a capital letter
+
+Pattern Matching 
+
+match <expr> with 
+| <pattern> -> <expression>
+| <pattern> -> <expression>
+…
+| <pattern> -> <expression>
+
++ patterns characterize the shape of values the scrutinee might have considering the type of the scrutinee. 
+
+
+
+
+
+****** CHAPTER 2 : INDUCTION *****
+
++Mathematical Induction and Structural Induction principles are super important to computer science theory
+
+~ Mathematical Induction
+
++Simplest form of induction —  we want to prove a property for all n
+			Induction basis = 0  or 1 (or both sometimes)
+				Assume the property holds for n 
+			Induction Step = Establish that it also holds for n+1
+
+let rec power n k = if k = 0 then 1 else power n k-1
+
++ How can we prove that this expression will evaluate to n^k
++ Use the notation n_ to denote the variable vs n for the set of natural numbers
++ down arrow = expression evaluates to a value in multiple steps
++ ==> expression evaluates to another expression in one step
++ ==>* expression evaluates to another expression in multiple steps
+
+Base case: power(n_, k=0)
+==> if 0 = 0 then 1 else n_ * power(n_, 0-1)		by program
+==> if true then 1 else … 					by evaluation rules 
+==> 1 = n_^0 
+
+Step Case: Assume that power (n_, k_) ==> n_^k_. We have to show that power(n_,k+1_) evaluates to n_^k+1_
+==> if k+1_ = 0 then 1 else n_* power (n_,(k+1_) -1)
+==> if false then 1 …
+==> n_ * power (n_,(k+1_) -1)
+==> n_ * power (n_,k_)
+==> n_ * n_^k_ = n_^k+1_
+
+~ Complete Induction
++ Formalize a frequent pattern of reasoning — to prove a property using complete induction we need:
+				Induction Basis n=0
+				Induction Step: prove for all n>=0 by assuming the property for all n’<n and establishing it for n
+This is similar to mathematical induction except that we can pull the property n’<n instead of just the immediate predecessor
+
+Let rec power(n,k) = match k with
+| 0 -> 1
+| _ -> if even(k) then 
+	 let r = power( n, k/2) in r*r
+	else n * power(n,k-1)
+
+We know that (n^k)_ *(n^k)_ = (n^2k)_
+
+Now we want to prove by complete induction
+
+Base case: k=0
+Power (n_,0)
+==> 1 			by program
+==> n_^0 = 1
+
+Induction step: k>0
+Assume that power(n_, k’_) ==>* n_^k’_ for k’<k. Now we have to show that power(n_,k_) ==>* (n^k)_
+
+Divide into two subclasses for even and odd.
+
+
+~Structural Induction
+
++ Usually we need not only reason about numbers but also about inductively defined data structures. This is why we need structural induction
+
+type ‘a list = nil | :: of ‘a * ‘a list
+type ‘a tree = Empty | Node of ‘a * ‘a tree * ‘a tree
+
++ To prove a property about a list we need to first prove on our base case which would be nil list in this case. Then we assume the property holds for lists t and we establish it for h::t.
++ to prove a property trees we first need to prove it for the Empty case an then assume it holds for trees l and r and then establish it for Node (a,l,r)
+
+Let us consider the following two programs:
+
+PROGRAM NO. 1 : Allows us to insert an element, which consists of a key and the data into a BST.
+
+let rec insert ((x,d) as e) t = match t with 
+| Empty -> Node(e, Empty, Empty)
+| Node ((y,d'), l, r) -> 
+
+if x = y then Node (e, l, r)
+else
+(if x<y then Node ((y,d'), insert e l, r)
+else
+(if x<y then Node ((y,d'), l, insert e r)
+
+
+PROGRAM NO. 2 : Lookup the data associated to some key k in a BST t
+
+let rec lookup x t = match t with
+| Empty -> None
+| Node ((y,d), l ,r ) -> 
+
+if x=y then Some(d)
+else
+(if x<y then lookup x l
+else
+lookup x r)
+				
+WHAT WE WANT TO DO NOW IS ACTUALLY PROVE THAT :
+If t is a BST then lookup x (insert (x,d) t) ==>* Some(d)
+
+
+Base Case : t=Empty
+lookup x (insert (x,d) t)
+==> lookup x (insert (x,d) Empty)
+==> lookup x (Node((x,d), Empty, Empty))
+==> Some(d)
+
+Step Case : t= Node((y,d'),l,r)
+assume property holds for subtrees l and r ==> Some(d)
+
+SubCase 1: x=y
+lookup x (insert (x,d), Node ((y,d'),l,r))
+==> lookup x (Node ((x,d),l,r))
+==>* Some(d)
+
+
+SubCase 2: x<y
+lookup x (insert (x,d), Node ((y,d'),l,r))
+==> lookup x (Node((y,d'), insert l,r)
+==> lookup x (insert (x,d) l)
+==>* Some(d)
+
+
+SubCase 3: x>y
+lookup x (insert (x,d), Node ((y,d'),l,r))
+==> lookup x (Node((y,d'), l, insert r)
+==> lookup x (insert (x,d) r)
+==>* Some(d)
+
+~ 2.4 Generalizing the statement
+Usually induction is really straightforward, but when the correctness property is harder to prove we usually just need to take a step back and try to prove a more general statement than what the problem is actually asking. ==> GENERALIZING
+
+~2.5 Conclusion
+With a tool like induction linked with the type-checker tool, we may prove stonger properties about our programs like full correctness.
+
+
+
+
+********** CHAPTER 3 : FUN WITH HIGHER ORDER FUNCTIONS **********
+	
++ Higher order functions are extremely powerful -- necessary for the construction of modular, elegant, well structured and reusable programs
++ Abstract common functionality ==> short and compact programs.
++ Important for lazy computations and handling infinite data
+
+~ 3.1 Passing Functions as Arguments 
+
++ because essentially functions are just values --> we can make functions that take on other functions as their arguments
 
  
 		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+********** CHAPTER 4 : REFERENCES **********
+
++ expressions should always have a type and should evaluate to a value
++ expressions may also have an EFFECT --> action resulting from the evaluation OTHER THAN returning a value 
+					+ We will look at extensions which support allocation and mutation of storage 						during evaluation
+					+during evaluation, storage may be updated --> affecting other evaluations
+					
+~ 4.1 Binding and Scope
+

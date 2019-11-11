@@ -229,15 +229,447 @@ With a tool like induction linked with the type-checker tool, we may prove stong
 
 
 
-
-
-
 ********** CHAPTER 4 : REFERENCES **********
 
-+ expressions should always have a type and should evaluate to a value
-+ expressions may also have an EFFECT --> action resulting from the evaluation OTHER THAN returning a value 
-					+ We will look at extensions which support allocation and mutation of storage 						during evaluation
-					+during evaluation, storage may be updated --> affecting other evaluations
-					
-~ 4.1 Binding and Scope
++ Expressions always have a type and a value 
++ Expressions may also have an effect 
++ EFFECT : is an action resulting from an evaluation of a n expression OTHER THAN returning a value
++ Language extensions which support allocation and mutation of storage during evaluation
++ During evaluation storage may. Be allocated or mutate which affects any future evaluation
 
+
+~ 4.1 Binding and Scope 
+
++ Variables within a function or let statements only exist within that scope and their names don’t really matter . 
+
+```
+let test () =
+let pi = 3.14 in 
+let area = (fun r -> pi *. r *. r) in
+let a2 = area (2.0) in
+let pi = 6.0 in 
+let a3 = area 2.0 in
+	print_string( “Area a2 =“ ^ string_of_float a2 ^ “\n”);
+	print string(“Area a3 ‘= “ ^ string_of_float a3 ^ “\n”);
+```
+
+~4.2 Reference Cells 
++ extend our language to mutable storage with reference calls.
++ A reference cell is basically a container where a value of a specific data type is stored
++ We can read or replace these values during execution  — previous and future values are terms we will begin to use
+		+ the is different than the binding of a variable because that doesn’t change when we evaluate that variable within its scope
+		+ The contents of a reference cell may change when we evaluate another expression
++ Programming with cells require commands and thus fall under imperative programming
+
+
++ A reference cell is created and updated by the constructor ref
++ ref 0 —> reference cell with content 0 —> int ref type
+
++ reference cells may also be bound to names, passed as arguments of functions and returned as function outputs.
+
+let r = ref 0 
+let s = ref 0
+^^^ not referring to the same cell —> r==s —> false
+
+
++ r == s compares the cells’ addresses in memory COMPARES LOcATION
++ let w = r=s compares the values (and if the same returns true)
+
+
++ WE READ THE CONTENT OF A REFERENCE CELL with !
+ 
++ We can directly pattern match on the content of a cell writing the following pattern
+```
+let {contents = x} = r;;
+Val x : int = 0
+# let { contents = y } = s ;;
+Val y : int 0
+
++ we assign an operator with := — assignment operator 
++ to use this operator the first symbol must be a ‘a ref and the right most value must be of type ‘a
++ when we update a reference cell we destroy the previous value!
++ this means that there is no stack and so if a function uses the reference we have to be careful because even if the reference is updated after the function is defined , it will use the updated reference value
+```
+let test-update () =
+Let pi = ref 3.14 in
+let area = (fun r - !p *. r *. r) in
+Let a2 = area (2.0) in 
+Let _ = (pi := 6.0) in 
+Let a3 = area 2.0 in
+print_string (“area a2” ^string_of_float a2 ^ “\n”)
+print_string (“area a3” ^string_of_float a3 ^ “\n”)
+```
+This will have a2 = 12.56
+And a3 will be 24 — BECAUSE EVEN IF DEFINED BEFORE REFERENCE UPDATE THERE IS NO STACK FOR REFERENCES
+
+let r = ref 0
+let t = r
+
++ this is called aliasing — can use the name t to refer to the same reference cell as r
++ you can also view it as two variables bound to the same reference cell 
++ if you update t then you update r as well
+
+let _ = r:=3 —————
++ the value of the expression is discarded
++ r := 3 has an empty value () and it the type UNIT 
+
+WHAT THE HELL???
+
+So its important to note that we can sequentially compose expressions:
+
+These are equivalent
+1. expr1; expr2
+2.  let _ = expr1 in expr2
+
+
+
+~ 4.3 Observation
+
++ clear distinction between the reference cell and the contents of the cell
++ use references sparingly 
+
+~4.4 Programming well with references 
+
++ Let us define factorial function in imitation of an imperative language
+```
+let imperative_fact n =
+let result = ref 1 in
+let i = ref 0 in
+let rec loop () =
+		if !i = n then ()
+		else ( i : = !i + 1; result := !result * !I; loop())
+In
+		loop(); !result
+```
+
+
+~4.4.1 Mutable data structures
+
++ immutable data structures = trees or lists = impossible to change the structure unless we make a modified copy of the structure
+		+ operations performed on them do not destroy the original structure
++ sometimes we do not want to rebuild our data structure == dictionary example
+		+ in place update operation 
+
+PERSISTENT VS EPHEMERAL DATASTRUCTURES
+
+Type ‘a rlist = Empty | RCons of ‘a * ‘a list ref
+This is a reference list —— 
+
+```
+let l1 = ref (RCons(4, ref Empty))
+let l2 = ref (RCons(5, l1)) ;;
+val 1 : int rlist ref = { contents = RCons (4, { contents = Empty})}
+val 2 : int rlist ref = { contents = RCons ( 5, { contents = RCons (4, { contents = Empty})})}
+
+l1 := !l2
+```
+This creates a circular list that I challenge you to draw
+
+let us do observe : 'a rlist * int -> ()
+
+```
+let observe l n = match 1 with
+| Empty -> print_string "0\n"
+| RCons(x, l) -> 
+		if x=0 then print_string "STOP\n"
+		else ( print_string( string_of_int x " "));;
+		observe !l (n-1)
+```
+
+~4.4.2 Destructive Append and Reverse
+
+```
+type 'a refList = ('a rlist) ref
+
+(* rapp : 'a refList * 'a refList -> ()*)
+let rec rapp r1 r2 = match r1 with
+| { contents = Empty } -> r1 := !r2
+| { contents = RCons (h,t) -> rapp t r2 
+```
+this modifies the list r1 is pointing to
+
+
+(*rev : 'a refList -> unit *)
+```
+let rec rev r0 =
+let r = ref Empty in 
+let rev rev' l = match !l with
+| Empty -> r0 := !r
+| RCons (h,t) -> (r := RCons(h, ref(!r) in
+rev' t)
+in rev r0
+```
+
+~4.5 Closures, References and Objects
+Write a counter which is incremented by thte function tck and reset by the function reset
+(*tick : unit -> int
+  reset : unit - unit *)
+  
+  ```
+  let counter = ref 0 in
+  let tick () = counter := !counter + 1 in
+  !counter in
+  let reset () = (counter := 0) in 
+  (tick, reset)
+  ```
+  If we want to have multiple counters we can just initialize a record counter_object which contains two methods
+  ```
+  type counter_object = {tick : unit -> int ; reset : unit -> unit}
+  
+  let newCounter () = 
+  	let counter = ref 0 in 
+	{ tick = (fun () -> counter := !counter + 1; !counter);
+	  reset = fun () -> counter := 0}
+```
+
+~4.6 Other COmmon Mutable Data Structures
+
++ Records: similar to something you have done before in 206? yeah when you had student and then within student you had name, id, gpa ...
++ A record is a n-arry tuple where we can use the alabel to retrieve a given component. Each entry is a location in memory, usually not mutable
+
++ record type student with firends name, id, bitrthdate and city, balance -- how much the student owes the university
++ balance is mutable 
+
+
+```
+type student = { name : string;
+id : int;
+birthdate: int * int * int;
+city: string;
+mutable balance: float }
+
+let s1 = { name: "James"; 
+id= 260715039;
+birthday=(4,11,2019)
+city= "montreal";
+balance = 169.03};;
+
+(*update s1 balance*)
+s1.balance <- 0.0;;
+```
++ Important to note that we can only change that element which is mutable. 
++ There exists both mutable arrays and those which are not mutable 
+
+
+
+
+
+********** CHAPTER 5 : EXCEPTIONS ***********
+
++ when an expression type checks but incurrs a runtime error
+		+ has a type but does not have a value --> effect: raise exception
++ we can define out own exceptions
+
+```
+exception Domain
+
+let fact n = 
+	let rec f n =
+	if n = 0 then 1 
+	else ( n * f (n-1)) 
+	in 
+	if n<0 then raise Domain
+	else f n
+
+let runFact n = 
+try
+let r = fact n in 
+	print_string("factorial of" ^ strong_of_int n ^ "is" ^ string_of_int r ^ "\n")
+with Domain -> print_string "Error: Invariant violated -- trying to call factorial on inputs n<0 \n"
+```
+
+
+~5.1 Its all about control
+
+backtracking = controlling the behaviour of an execution
++ if we get stuck we go back and see wht the next possible greedy solution would be
++SEARCHING FOR AN ELEMENT IN A TREE
+
+(* find : ('a * 'b) tree -> 'a -> 'b making no assumptions about our tree being a BST*)
++ if the tree is Empty --> we fail and raise the exception notFound
+
+```
+exception notFound
+type key = int
+type 'a tree = empty | Node of 'a tree * (key, 'a) * 'a tree
+(* find : ('a * 'b) tree -> 'a -> 'b making no assumptions about our tree being a BST*)
+let rec find t k = match t with
+| Empty -> raise notFound
+| Node (l, (k',d), r) -> if k = k' then d 
+else
+try find l k with notFound -> try find r k
+```
+
+let ll = Node (Empty, (3, "3"), Empty)
+let lr = Node (Empty, (44, "44"), Empty)
+let l = Node ( ll, (7, "7"), lr)
+let r = Node ( Node (Empty, (55, "55"), Empty) , (7, "7"), Empty) let t = Node ( l, (1, "1"), r)
+
++ Notice that each recursive call will raise an exception, and those exceptions will be handled before moving up again
++ exceptions provide a way of transferring control and info from some point in the excecution of a progrma to a handler assoiated with a point previously passed by the execution TRANSFER CONTROL UP THE STACK
+
+
+*********** CHAPTER 6 : MODULES ************
++ controlling the complexity and maintaining a large system -- modularity is KEY
++ Modules allow large programs to be split into smaller sections which can be compiled individually.
++Adds structure to large programs
++ Large programs become maintainable and reusable
+
+~6.1 Basic Ideas behing Modules and Module Types
++ we want to package together related definitions and enfore consistent naming scheme
++ this package is called a STRUCTURE and it contains an arbitraty sequence of definitions
++ we must name structures using model
+```
+module Stack : STACK (* (STACK with type el = int) *) =
+struct
+type stack = int list
+let empty(): stack = []
+let push (i:int) (s:stack) = i::s
+let is_empty (s:stack) = match s with 
+|[] -> T
+|_::_ -> F
+let pop (s:stack) = match s with
+|[] -> None
+|_::t -> Some t
+let top (s:stack) match s with 
+|[]-> None
+|h::_ -> some h
+let stack2list (s:stack) = s
+end
+
+# let s = Stack.empty ();;
+val s : Stack.stack = []
+# let s0 = Stack.push 0 s;; 
+val s0 : int list = [0]
+```
++ we can make sure that our module implements an expected functionality by declaring a module type -- SIGNATURE
+
+```
+module type STACK = sig
+type stack
+val empty : unit -> stack
+val push : int -> stack -> stack val is_empty : stack -> bool
+val pop : stack -> stack option val top : stack -> int option
+val size : stack -> int
+val stack2list : stack -> int list
+end
+```
++ the module must have all the components and must be of the same definitions -- then it will implement the signature
++ can have more components and still implement the signature
++ though may have less strict types than the signature
+
+~6.2 Keeping things abstract
+```
+module type STACK = sig
+type stack abstract *)
+type el
+val empty : unit -> stack
+val is_empty : stack -> bool
+val pop : stack -> stack option val push : el -> stack -> stack val top : stack -> el option
+val size : stack -> int
+val stack2list : stack -> el list
+end
+```
+Let us do the currency example ---
+MODULE TYPE 
+module type CURRENCY = sig
+type t
+val unit : t
+val plus : t -> t -> t
+val prod : float -> t -> t val toString : t -> string
+end
+MODULE 
+module Float = 
+struct
+type t = float
+let unit = 1.0
+let plus = (+.)
+let prod = ( *. )
+let toString x = string_of_float x
+end ;;
+MODULE : module Euro = (Float : CURRENCY);;
+MODULE : module USD= (Float : CURRENCY);;
+---
++ Currencies are isomorphic but disjoint structures
+let euro x = Euro.prod x Euro.unit
+let x = Euro.plus (euro 10.0) (euro 20.0) 
+Euro.toString x --> "30."
+---
+module type CLIENT = (* client’s view *) sig
+type t
+type currency
+val deposit : t -> currency -> currency val retrieve : t -> currency -> currency
+end ;;
+module type BANK = (* banker’s view *) sig
+include CLIENT
+val create : unit -> t end ;;
+
+module Old_Bank (M : CURRENCY) : (BANK with type currency = M.t) = struct
+type currency = M.t
+type t = { mutable balance : currency } // type t =int
+let zero = M.prod 0.0 M.unit and neg = M.prod (-1.0)
+//let account = {number : int; mutable balance ; currency}
+//let all_accounts = Hashtbl.create 10
+//and last = ref 0
+// let account n = Hashtbl.find all_accounts n
+let create() = { balance = zero } // let n = incr last; !last in Hashtbl.add all_accounts //n {number = n; balance = zero}; n
+let deposit c x = if x > zero // deposit n x = 
+//let c = account n in 
+//if x > zero 
+then
+c.balance <- M.plus c.balance x;
+c.balance
+let retrieve c x = // n x 
+// let c = account n in 
+if c.balance > x then
+deposit c (neg x) // (c.balance <- M.plus c.balance x; x)
+else c.balance// else zero
+end;;
+
+
+********** CHAPTER 7: CONTINUATIONS **********
++ representation of the execution state of a program at a certain point in time
++ the work that still needs to be done
++ can save the state of an object and then restore theis state later
++FUNCTIONS AS CONTINUATIONS
+
+~7.1 Tail recursive append function
+```
+let rec append l k = match l with | [] -> k
+| h::t -> h::append t k
+````
++ not tail recursive becasue it applies :: to the result of the recursive call append
++ to make it tail recursive we add an additional parameter called a continuation
++ REPRESENTS THE COMPUTATION WHICH SHOULD BE DONE ON THE RESULT of f
+
++ base case: call the continuation
++ recursive case: add computation on the result of the continuation!! functional accumulator !!!! STACK OF FUNCTIONS
++ initial continuation: often the id function (fun x -> x)
+
+f: 'a -> 'b ===> f: 'a -> (c'-> 'b) -> 'b
+
+```
+let rec app_tr l k =
+	let rec app' l k c = match l with
+	|[] -> c k
+	| h::t -> app' t k (fun r -> c (h::r))
+in 
+app' l k (fun r -> r)
+```
+
+app’ [1;2] [3;4] (fun r -> r)
+app’ [2] [3;4] (fun r1 -> (fun r -> r) (1::r1))
+app’ [] [3;4] (fun r2 -> (fun r1 -> (fun r -> r) (1::r1)) (2::r2)) (*)
+(fun r2 -> (fun r1 -> (fun r -> r) (1::r1)) (2::r2)) [3;4]
+(fun r1 -> (fun r -> r) (1::r1)) (2::[3;4]))
+(fun r -> r) (1::2::[3;4])
+(1::2::[3;4])
+
+~ 7.2 Control with continutations
+FINDING ELEMENTS IN A TREE
+(* find_tr : (’a -> bool) -> ’a tree -> (unit -> ’a option) -> ’a option. *)
+let rec find_tr p t cont = match t with | Empty -> cont ()
+| Node(l, d, r) ->
+if (p d) then Some d
+else find_tr p l (fun () -> find_tr p r cont)
+let find’ p t = find_tr p t (fun () -> None)

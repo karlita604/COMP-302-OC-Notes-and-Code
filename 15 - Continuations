@@ -54,7 +54,7 @@ How can we make this tail recursive?
 	let app_tr l1 l2 =
 			let rec app' l1 l2 cont = match l1 with
 			| [] ->  cont l2   																		(*Call the continuation*)
-			| h::t -> 	app' t l2	  		( fun r -> cont (h::r) ) . (* this is in place of cont*)
+			| h::t -> 	app' t l2	  ( fun r -> cont (h::r) ) . (* this is in place of cont*)
 			
 			(*We want to build up our call stack = build up continuation = build a 																				function which receives the result r of appending t to l2 and continues  																		to build the final result by:
 																	-cons h to r 
@@ -73,7 +73,7 @@ How can we make this tail recursive?
 	say you have a list 
 	app' [1;2] [3;4;5] (fun l -> l) **** this is the identity function***
 	
-	==> app_tr [2][3;4;5] (fun r -> id (1::r)) **** same as (fun r -> (dun l -> l) (1::r1))
+	==> app_tr [2][3;4;5] (fun r -> id (1::r)) **** same as (fun r -> (fun l -> l) (1::r1))
 	==> app_tr [][3;4;5] (fun r -> (fun r -> (fun l -> l)(1::r1))2::r2)
 	BUILDING THE CONTINUATION
 	CALLING THE CONTINUATION in the base case passing [3;4;5]

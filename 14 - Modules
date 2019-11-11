@@ -9,11 +9,10 @@ Primary benefits:
 * Programs are easier to maintain and reuse
 
 
-Abstractions may be used to create two isomorphic but incompatible views of a same structure. For exaple all currencies can be represented by floats, but not all currencies should be mixed or used together (incompatible). 
+Abstractions may be used to create two isomorphic but incompatible views of a same structure. For example all currencies can be represented by floats, but not all currencies should be mixed or used together (incompatible). 
 Currencies are isomorphic but disjoint structures, with respective incompatible units Euro and Dollar. this is modeled in Ocaml by a signature constraint/module type.
 
 Remark that multiplication became an external operation on floats in the signature CURRENCY. Constraining the signature of Float to be CURRENCY returns another, incompatible view of Flaot. Moreover, repeating this operation returns two isomorphic structures but with incompatible types.
-
 
 ```
 module type CURRENCY = 
@@ -162,6 +161,141 @@ module Citybank = Bank(Dollar);;
 (* All banks have the same interface, however they were built. In fact, it happens to be the case that the user cannot even observe the difference between either implementation; however, this would not be true in general. Indeed, such a property can not be enforced by the typechecker. *)
 
 ```
+
+
+
+
+type comparison = Less | Equal | Greater
+module type ORDERED =
+  sig
+    type t 
+    val compare : t -> t -> comparison
+  end
+module IntLt : ORDERED = 
+  struct
+    type t = int
+    let lt(s,t) = s < t
+    let eq(s,t) = (s = t)
+    let compare s t = match () with
+      | _ when eq (s, t) -> Equal
+      | _ when lt (s, t) -> Less
+      | _ -> Greater
+  end
+
+(** Lexicographic ordering on lists *)
+module ListLt : ORDERED -> ORDERED =
+  functor (Elt : ORDERED) ->
+  struct
+    type t = Elt.t list
+    let rec compare l1 l2 = match l1, l2 with
+      | [], [] -> Equal
+      | _, [] -> Greater
+      | [], _ -> Less
+      | x :: xs, y :: ys ->
+         match Elt.compare x y with
+         | Less -> Less
+         | Equal -> compare xs ys
+         | Greater -> Greater
+  end
+
+module type SET =
+  functor (Elt: ORDERED) -> 
+  sig
+    type element = Elt.t      (* concrete *)
+    type set                  (* abstract *)
+    val empty : set
+    val add : element -> set -> set
+    val member : element -> set -> bool
+  end
+
+module Set : SET =
+  functor (Elt: ORDERED) ->
+  struct
+    type element = Elt.t
+    type set = element list
+    let empty = []
+    let rec add x s = match s with
+      | [] -> [x]
+      | hd::tl ->
+         match Elt.compare x hd with
+         | Equal   -> s         (* x is already in s *)
+         | Less    -> x :: s    (* x is smaller than all elements of s *)
+         | Greater -> hd :: add x tl
+
+    let rec member x s = match s with
+      | [] -> false
+      | hd::tl ->
+         match Elt.compare x hd with
+         | Equal   -> true     (* x belongs to s *)
+         | Less    -> false    (* x is smaller than all elements of s *)
+         | Greater -> member x tl
+  end
+
+(* Useful for code documentation *)
+module StringSet = Set(StringLt)
+module IntSet = Set(IntLt)
+module IntMod50Set = Set(IntMod50)
+
+(* More elegantly 
+
+  We define a parameterized module Set2 directly and
+  declare its "return" type, i.e. the kind of module it 
+  defines.
+*)
+
+module type SET =
+  sig
+    type element
+    type set
+    val empty : set
+    val add : element -> set -> set
+    val member : element -> set -> bool
+  end;;
+
+(* The `with type` part is crucial so that the type `element` is known
+   outside the module to be the same as the element type! *)
+module Set2 (Elt: ORDERED) : (SET with type element = Elt.t) =
+struct
+  type element = Elt.t
+  type set = element list
+  let empty = []
+  let rec add x s = match s with
+    | [] -> [x]
+    | hd::tl ->
+       match Elt.compare x hd with
+       | Equal   -> s         (* x is already in s *)
+       | Less    -> x :: s    (* x is smaller than all elements of s *)
+       | Greater -> hd :: add x tl
+	  
+  let rec member x s = match s with
+    | [] -> false
+    | hd::tl ->
+       match Elt.compare x hd with
+       | Equal   -> true     (* x belongs to s *)
+       | Less    -> false    (* x is smaller than all elements of s *)
+       | Greater -> member x tl
+end;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -14,13 +14,11 @@ Benefits:
 
 **** Static Vs. Dynamic Violations ****
 * Static violations are signalled by typechecking errors
-*Dynamic violations are signalled by raising an exception
-    --> unexxpected inputs
+* Dynamic violations are signalled by raising an exception
+    --> unexpected inputs or maybe a division by 0
 
 
-```
-3/0
-```
+``` 3/0 ```
 will type-check but cannot be evaluated and will incur a
 runtime fault that is signalled by raising the exception Division_by_zero
 
@@ -29,14 +27,15 @@ Value=
 Effect= raises run-time exception Division by zero
 
 ```
-let head_of_empty_list
-let head (x::t) = x in head []
+let head_of_empty_list =
+let head (x::t) = x in 
+head []
 ```
-Type= 'a list
+Type= 'a 
 Value= 
 Effect= raises run-time exception Match_failure
 
-Another source of dynamic run-time error is due to non-exhaustive
+* Another source of dynamic run-time error is due to non-exhaustive
  matches. For example:
 
 ```
@@ -53,16 +52,13 @@ Exception: Match_failure ("", 650, -489).
 #  
 ```
 
-It is also possible to define our own exceptions. These last examples have used pre-defined exceptions.
+* It is also possible to define our own exceptions. These last examples have used pre-defined exceptions.
 These pre-defined ones have pre-defined meaning.
 
 ```
 exception Domain
 
-(*
-   Check the invariant for the externally
-   visible function only, and not during recursion.
-*)
+(* Check the invariant for the externally visible function only, and not during recursion. *)
 
 let fact n =
   let rec f n = 
@@ -81,7 +77,6 @@ let runFact n =
   | Domain ->
      print_string "Error: Invariant violated -- trying to call factorial on inputs < 0"
 ```
-
 Notice how we declared our own exception
 Technically, an `exception` declaration is _adding a new constructor_ to the preexisting type `exn`.
 When we define such new exception, we can also bundle other data, similar to ordinary constructors.
@@ -94,26 +89,63 @@ type key = int
 type 'a btree = 
   | Empty 
   | Node of 'a btree * (key * 'a) * 'a btree
-	
-	
-(*ORIGINAL VERSION OF FUNCTION:*)
+
+(* Previous solution to checking whether there is an element with key
+   k in the tree provided based on option type; 
+
+   findOpt : 'a btree -> int -> 'a opt *)
 let rec findOpt t k = match t with 
   | Empty -> None
   | Node(l, (k', _), _) when k < k' -> findOpt l k
   | Node(_, (k', _), r) when k > k' -> findOpt r k
   | Node(_, (_ , x), _) -> Some x
 
+(* Using exceptions to signal error *)
+(* New implementation using exception *)
 
+(* Define a program-specific exception with a name *)
+exception NoSuchKey of key (* exception includes the problematic key *)
 
-(*Now we want to implement the exceptions that we can to make this code a little cleaner*)
-exception NoSuchKey of key
+(* Find (T,k) = d if (k,d) is in the tree T
+   raises exception NoSuchKey otherwise *)
+let rec find t k = match t with 
+  | Empty -> raise (NoSuchKey k) (* raise instead of using None *)
+  | Node (l, (k', d), r) when k < k' -> find l k
+  | Node (_, (k', _), r) when k > k' -> find r k
+  | Node (_, (_,  x), _) -> x (* no need to use Some now *)
+
+(* Find t k n = d 
+   searches the tree T up to depth n. If we did no find an entry with key k
+   we raise the exception Error with error msg "No entry found in tree"; 
+   if we exceeded our bound n, we raise the exception Error with the
+   error msg "Bound exceeded" .
+*)
+
 exception ErrorMsg of string
+
+let rec findEx t k n = 
+  match t with
+  | _ when n < 0 -> raise (ErrorMsg "Bound exceeded")
+  | Empty ->
+     raise (ErrorMsg ("No entry with key " ^ 
+			                  string_of_int k ^ 
+			                    " found in tree"))
+  | Node (l, (k', _), _) when k < k' -> findEx l k (n - 1)
+  | Node (_, (k', _), r) when k > k' -> findEx r k (n - 1)
+  | Node (_, (_,  x), _) -> x
+
+(* Instead of using strings, we can define separate exceptions.
+   This makes it possible for the caller to easily determine which
+   error occurred by using try-with.
+ *)
+
 exception BoundExceeded
+(* We already defined NoSuchKey *)
 
 let rec findEx' t k n = 
   match t with
-  | _ when n < 0 -> raise BoundExceeded (* this was:  raise (ErrorMsg "Bound exceeded")*)
-  | Empty -> raise (NoSuchKey k)  (*this was: raise (ErrorMsg ("No entry with key " ^ string_of_int k ^ " found in tree"))*)
+  | _ when n < 0 -> raise BoundExceeded
+  | Empty -> raise (NoSuchKey k)
   | Node (l, (k', _), _) when k < k' -> findEx' l k (n - 1)
   | Node (_, (k', _), r) when k > k' -> findEx' r k (n - 1)
   | Node (_, (_,  x), _) -> x
@@ -170,10 +202,46 @@ let rec findEx'' t k n =
    control flow.
 *)
 
-GO OVER ALL THE DIFF EXAMPLES GIVEN IN THE CODE
 
 
 
+
+
+******* Today's example: Got change ? ********
+
+Implement a function change. It takes an input a list of availaable coins and an amount amt. It returns the exact change for the amount (ie. a list of available coins, [c1;c2; ... ;cn] such that c1 + c2 + ... + cn = amt)
+If possible, otherwise raise an exception Change
+
+```
+exception Change
+
+let rec listToString l = match l with 
+  | [] -> ""
+  | [x] -> string_of_int x
+  | x :: xs -> string_of_int x ^ ", " ^ listToString xs
+
+
+let rec change coins amt = match coins with
+  | _ when amt = 0 -> [] 		(* If the amount of change to make is zero, then we're done. *)
+  | [] -> raise Change 			(* run out of available coins but amt is not 0, then we fail with an exception*)
+  | coin :: cs when coin > amt -> change cs amt
+     (* if this coin is too large, we forget about it for now and consider the other coins *)
+  | coin :: cs ->
+	   try  coin :: change coins (amt - coin)
+	   with
+  | Change ->  change cs amt
+        (* If it turns out that by using `coin` we were unable to make
+           the remaining change, then we forget about `coin` and try to
+           make change for the full amount with the remaining coins.
+         *)
+		 
+let change_top coins amt =
+  try 
+  let c = change coins amt in
+  print_string ("Return the change: " ^ listToString c ^ "\n")
+  with Change -> print_string ("Sorry, I cannot give change\n")
+```
+       
 
 
 

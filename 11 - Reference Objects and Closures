@@ -6,18 +6,16 @@ Expressions in OCaml have characteristics:
 + An expression has a type -- a little lie
 + An expression evaluates to a value (or diverges)
 		+ It diverges but still has a type
-		
 		+ Every program that is trying to be executed -  has a type 
-
 + An expression may have a type and it may also have an effect ***
-+ 
 
 
-
+```
 let (k : int) = 4;;
 let (k : int) = 3 in k * K ;; (* let me introduce this value of k within this scope *)
 k;;
 (* What is the value of k? =4 *)
+```
 
 We only overshadow the previous occurence of k in out binding stack within the scope of the k*k 
 We only see the past but we never see the future
@@ -52,8 +50,10 @@ let test () =
 + How do we read value stored in a reference call?
 
 ```!x```  -- Read value that is stroed in the reference cell with name r
-```
+``` let { contents = x } = r ``` -- Pattern match on value tht is stored in the reference cell r
 
++ How do we update the value stored in a reference cell
+``` x:=3 OR x.content <- 3``` Writes the value in the refernce cell with the name r. The previously stored value is overwritten
 
 + How do we compare two reference calls?
 		We might want to compare the content or we want to compare addresses
@@ -62,7 +62,7 @@ let test () =
 		+ "=" means compare values
 		
 		
-		``` x:=3 OR x.content <_ 3``` Writes the value in the refernce cell with the name r. The previously stored value is overwritten
+	
 		
 		
 		
@@ -72,22 +72,21 @@ let test () =
 		
 		let r = ref 0
 		!r : int (*provided that r has int ref*)
-		r := <exp> (provided that r has 
+		r := <exp> (provided that r has a type)
 		r := 2;;
-		r = !r + 1;;
-		! r --> 3;;
+		r := !r + 1;;
 		
 		Cannot do pointer arithmetic (not usually recommended anyway)
 		
-		Let;s play a little but
+		Let's play a little but
 		
+		r.content <- 3
 		let s = ref 3;;
 		s = r;; --> boolean true
-		s++r;; -->boolean false
+		s==r;; -->boolean false -- because they both have different addresses
 		
 		
 *********************************
-		
 		
 		
 let run_up () = 
@@ -123,6 +122,7 @@ memory location becomes really hairy
 
 GOOD USES OF STATE: GLOBAL COUNTER
 
+```
 let counter = ref 0
 
 (* newVar () === > a, where a is a new name *)
@@ -131,8 +131,9 @@ let counter = ref 0
 let counter = ref 0
 let newVar()=
 (counter := !counter +1;
-"a" ^ string_of_int (!counter));;   I AM UNSURE WHAT THE ^ MEANS HELP SOS -- i think it means concatinate
-
+"a" ^ string_of_int (!counter));;  
+I AM UNSURE WHAT THE ^ MEANS HELP SOS -- i think it means concatinate
+```
 
 
 print_string "302";;
@@ -145,8 +146,9 @@ print_string "302";;
 	- : unit = ()
 	
 	
-(r := 42; print_string("I've updated r to " ^ (string_of_int (!r)))
-	I've updated r to 42
+(r := 42; 
+print_string("I've updated r to " ^ (string_of_int (!r)))
+I've updated r to 42
 	- : unit = ()
 	
 	

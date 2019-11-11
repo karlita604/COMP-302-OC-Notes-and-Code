@@ -1,0 +1,262 @@
+********** WHAT IS A CONTINUATION? **********
++ Continuation is a representation of the execution state of a program (ie. a call stack) at a certain point in time. Save the current state of the execution into some object andrestore the state from this object at a later point in time resuming its execution.
+
+**********HOW TO CONVERT TO A CONTINUATION-PASSING STYLE**********
+	1. Change the type signature: add the continuation
+				f: 'a -> 'b 
+	==>   f': 'a -> ('c -> 'b) -> 'b
+	
+	another example: append: 'a list -> 'a lsit -> 'a list
+	==> 						 app_tr: 'a list -> 'a list -> ('a list -> 'r) -> 'r
+
+	2. All the work that should happen after the recursive call should be moved within the continuation
+```
+| x::xs -> let ys = append xs l2 in 
+  x::ys
+```
+Should become :
+```
+| x::xs -> 
+app_tr xs l2 (fun r -> x::r)
+```
+
+**********WHEN DO WE USE CONTINUATIONS?**********
++ Tail recursion: the coninuation is a functional accumulator; it represents the call stack build then recursively calling a function and builds the final result
++ FAILURE CONTINUATION: the continuation that keeps track of what to do upon failire and defers control to the continuation
++ SUCCESS CONTINUATION: the continuation that keeps track of what to do upon success, defers control to the continuation and build the final result
+
+
+
+COLLECTING ALL ELEMENTS IN A TREE DEMO:
+
+(* --------------------------------------------------------------------------*)
+* Finding all elements satisfying a given property *)
+(* --------------------------------------------------------------------------*)
+
+(* VERSION 1: Straightforward recursive program                              *)
+let rec findAll p t = match t with 
+  | Empty -> []
+  | Node(l,d,r) -> 
+    if (p d) then (findAll p l) @(d ::(findAll p r))
+    else
+      (findAll p l) @ (findAll p r)
+
+(* --------------------------------------------------------------------------*)
+(* VERSION 2: Tail-recursive version using success continuation              *)
+let rec findAll' p t sc = match t with 
+  | Empty -> sc []
+  | Node(l,d,r) -> 
+    findAll' p l (fun el -> findAll' p r (fun er -> if (p d) then sc (el@(d::er)) else sc (el@er)))
+
+let rec findAll0 p t sc = match t with 
+  | Empty -> sc []
+  | Node(l,d,r) -> 
+     (if (p d) then
+       findAll0 p l (fun el -> findAll0 p r 
+					(fun er ->  sc (el@(d::er)))) 
+     else 
+       findAll0 p l (fun el -> findAll0 p r 
+					(fun er ->  sc (el@er))) 
+
+     )
+
+
+let rec findAll1 p t sc = match t with 
+  | Empty -> sc []
+  | Node(l,d,r) -> 
+     if (p d) then
+       findAll1 p l (fun el -> el @ d :: findAll1 p r sc)
+     else 
+       findAll1 p l (fun el -> el @ findAll1 p r sc ) 
+
+let r = findAll' (fun x -> x mod 3 = 0) tt (fun l -> l);;
+
+let findEvery p t = 
+  findAll' p t (fun el -> match el with [] -> None | _ -> Some el)
+
+
+let l = Node (Node (Empty, 2, Empty), 5, Node (Empty, 6, Empty))
+let r = Node (Empty, 12, Empty)
+let t = Node (Node (l, 7, Node (Empty, 8, Empty)), 11, r)
+
+let even x = (x mod 2) = 0 
+let odd x = (x mod 2) = 1 
+
+let k = findEvery even  t
+
+let r = findEvery odd  t
+
+(** BONUS **)
+
+let elim_option (none : unit -> 'b) (some : 'a -> 'b) (o : 'a option) =
+  match o with
+  | None -> none ()
+  | Some x -> some x
+
+
+(* THEOREM:
+   For any functions none : unit -> 'b and some : 'a -> 'b,
+   For any predicate p : 'a -> bool,
+   For any tree t : 'a tree,
+   we have:
+     elim_option none some (find p t) = find_tr p t none some
+
+   Proof: by induction on t.
+   (To get started, consider 2 cases:
+    1. t = Empty
+    2. t = Node(l, d, x) along with subcases for whether p d is true.)
+   EXERCISE.
+
+   (This is a generalization of the simpler theorem
+   find p t = find_tr p t (fun () -> None) (fun x -> Some x)
+   which I believe can't be proven directly.
+   Prove this more straightforward theorem as a consequence of the
+   generalized theorem given above.)
+ *)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ REGULAR EXPRESSION MATCHER
+ (* ------------------------------------------------------------------------------------*)
+* Motivation: want an efficient way to check for simple patterns in text*)
+(* -------------------------------------------------------------------------------------*)
+
+ Patterns describable by regular expressions:
+   - Singleton : matching a specific character
+   - Alternation: choice between two patterns
+   - Concatenation: succession of patterns
+   - Iteration: indefinite repetition of patterns
+
+  Note: regular expressions provide no concept of 
+  nesting of one pattern inside another. For this we require a richer
+  formalism, namely context-free grammars.
+
+  We can describe regular expressions via a BNF grammar, inductively:
+
+  r ::= a | r1 r2 | 0 | r1 + r2 | 1 | r*
+
+  We write L(r) for a given regular expression r to denote the
+  _language_ of the regular expression, i.e. the set of all strings
+  that can be generated from the expression.
+
+  We say a string s _matches_ a regular expression r iff s is in L(r). 
+
+  s never matches 0;
+  s matches 1 only if s = empty 
+  s matches a iff s = a
+  s matches r1 + r2 iff either s matches r1 or r2
+  s matches r1 r2 iff s = s1 s2 where s1 matches r1 and s2 matches r2.
+  s matches r* iff either s = empty or s = s1 s2
+                   where s1 matches r and s2 matches r*
+*)
+
+type regexp = 
+  | Char of char
+  | One
+  | Zero
+  | Times of regexp * regexp
+  | Plus of regexp * regexp
+  | Star of regexp
+
+let rec acc r clist k = match r , clist with 
+  | Zero          , s     -> false
+  | One           , s     -> k s
+  | Char c        , []    -> false
+  | Char c        , c1::s -> c = c1 && k s
+  | Times(r1, r2) , s     -> acc r1 s (fun s' -> acc r2 s' k)
+  | Plus(r1, r2)  , s     -> acc r1 s k || acc r2 s k
+  | Star r        , s     ->  
+     k s || acc r s (fun s' -> not(s = s') && acc (Star r) s' k)
+
+
+(* ------------------------------------------------------------------------ *)
+(* Auxiliary functions to turn strings into lists of characters             *)
+(* ------------------------------------------------------------------------ *)
+let rec tabulate f n = 
+  let rec tab n acc = 
+    if n < 0
+    then acc
+    else tab (n-1) (f n :: acc)
+  in
+  tab n []
+
+(* string_explode : string -> char list *)
+let string_explode s = 
+  tabulate (fun n -> String.get s n) ((String.length s) - 1)
+
+(* string_implode : char list -> string *)
+let string_implode l = 
+  List.fold_right (fun c s -> Char.escaped c ^ s) l ""
+
+(* ------------------------------------------------------------------------ *)
+
+(* accept : regexp * string -> bool *)
+let accept r s = acc r (string_explode s) (fun l -> l = []) 
+
+(* ------------------------------------------------------------------------ *)
+(* Some examples *)
+(* r0 = a + 0 *)
+let r0 = Plus(Char 'a', Zero)
+
+let ra = (Times(Char 'b', Times (Star(Char 'a'), Star(Times(Char 'a', Char 'b')))))
+
+(* r1 = aa *)
+let r1 = Times(Char 'a', Char 'a')
+
+(* r2 = (a + b)^*   *)
+let r2 = Star(Plus(Char 'a', Char 'b'))
+
+(* r = r2 r1 r2 *)
+let r3 = Times(r2, Times(r1, r2))
+
+
+(* r = (a + 1)(b + ba)^* *)
+let r4 = Times(Plus(Char 'a', One), Star(Plus(Char 'b',
+					   Times(Char 'b',
+						 Char 'a'))))
+(* r = g(1+r)(e+a)y *)
+let r5 = Times(Char 'g', Times(Plus(One, Char 'r'), 
+				 Times(Plus(Char 'e',
+					    Char 'a'),Char 'y')))
+
+let ob = Times (Char 'o', Char 'b')
+let oba = Times (Times (Char 'o', Char 'b'), Char 'a')
+let oa =  Times (Char 'o', Char 'a')
+let oo =  Times (Char 'o', Char 'o')
+
+(* r = b((ob)0 + oba *)
+let r5' = Times(Char 'b', Plus (Times (ob, Zero), oba))
+
+
+(* r = g(1+o)^* gle *) 
+let r6 = Times(Char 'g', Times(Star(Plus(One, Char 'o')), 
+				 Times(Times(Char 'g', Char 'l'),Char 'e'))) 
+
+let r6' = Times(Char 'g', Times(Star(Char 'o'), 
+				 Times(Times(Char 'g', Char 'l'),Char 'e'))) 
+
+(*
+ accept r6 'google'
+ accept r6 'gogle'
+ accept r6 'ggle'
+ accept r6 'gooooogle'
+ accept r6 'gooooogle'
+
+
+
+ accept r5 'gay'
+ accept r5 'gray'
+ accept r5 'grey'
+
+*)
+
+ (* apple, apply, ale, aply, aple, appppppple *)
+let r7 = Times(Char 'a', Times(Star(Char 'p'), 
+				 Times(Char 'l',
+				       Plus(Times(Char 'e', Plus(One, Char 's')), Char 'y'))))
+

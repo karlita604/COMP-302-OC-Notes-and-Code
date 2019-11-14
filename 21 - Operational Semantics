@@ -1,0 +1,89 @@
+let rec infer e = match e with 
+
+
+
+maybe we want to have amore expressive language, maybe we want to have let statements and other expressions and maybe other operations
+
+
+********** Adding Variables and let expressions **********
+if you understand variables and expressions then you understand everything else -- notion of SCOPE 
+
+BNF : Backus-Naur Form
+Operations op ::= + | - | * | < | =
+Expressions e ::= n | e1 op e2 | true | false | if e then e1 else e2
+
+What kind of expressions are legal? Well formed?
++ let x in x+1 end
+	We have to ask ourselves what IS x? 
++ let x = y in x+1 end
+	even if you choose to write y it is okay, we just want to 
++ let x = 3
+	Not legal because of the characteristics of our grammar
++ let x = (let y = x in y+x end) in x+1 end
++ let x = x+1 in x+1 end
++ let y = x+1 in y+x
+
+WHAT SHOULD IT FLAG AS AN UNUSED VARIABLE?
+
+WHAT IS A BOUND VARIABLE AND WHT IS A FREE VARIABLE?
+	+ let associates a name to a binding (introduces a binding) and we build a stack of bound values
+	
+*********** Free variables **********
++ Pientka says that variables are never free - they must always be somewhere in the file.
++ there is a concept of free variables that we can define
++ bound variable names do not really seem to matter
+
+********** Variable names should not matter*********
+
+******** Defining Free Variables *********
+
+FV(e) returns the set (a list) of the free variable names occurring in the expression e 
+
++ It is imo=portant to understand when something becomes bound.
+
+let x = 5 in (let x = x +3 in x + x end ) end
+		=							-   =				-		-
+		= overwrites/overshadows the other x --
+	+ this does not change in lazy or eager evaluation
+	+ the notion of a value changes but not the nothion of freedom
+	+ "let" is a binder
+	
+	
+	
+	
+	********** Computing Free Variables *******
+	FV(e) returns the set of the free variable names occuring in the expression e
+	
+	FV(x) = {x}
+	FV(e1 op e2) = FV(e1) U FV(e2)
+	FV( if e then e1 else e2) = FV(e)...NOT DONE ITS A SLIDE
+	
+	+ that means we can easily generate a function with this.. following exactly what we did on the slides
+	
+	
+	
+	
+	******* Substitution Defined **********
+	+ WE are trying to traverse this tree like structure, we want to find the x and we want to replace it 
+	
+	[e'/x] Replacce all free occurences of the variable x in the expression e with expression e'
+	
+	[e'/x](x) = e'
+	[e'/x](e1 op e2) = 	[e'/x]e1 op	[e'/x]e2
+  [e'/x](if e then e1 else e2) = if	[e'/x]e then	[e'/x]e1 else	[e'/x]e2
+	[e'/x](let y = e1 in e2 end) =
+	
+	
+	Example 
+	[5/x](let y = x+3 in y+x end) 
+= let y = [5/x](x+3) in [5/x]....NOT DONE
+
+
+LETS LOOK AT ANOTHER EXAMPLE:
+SLIDE 15 IS THE EXPLANATION
+
+
+
+There are other constructs that bind variables --> functions (recursive or nah) -> bind it to a definition
+																							 --> match 
+																							 --> variable declaration

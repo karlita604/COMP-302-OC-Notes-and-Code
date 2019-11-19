@@ -1,0 +1,151 @@
+*****Evaluation
+
++ We discussed the rules of the judgement  e ==> v (down arrow)
+Evaluation Rules:
+
+All the values evaluate to themselves
+We also had rules for primitive operations
+
+We had "if"
+
++ You can model a binding stack that binds names of variables to values. Then you could look up in the list --> can become rather complicated --> can be graphs or whatnot
++ Substitution is rather simple compared to that
+
++ We can turn the evaluation rules into a program
+
+``` mini-lang
+
+we need to retun the value e1 and then substitute and return to the evaluation
+
+let rec eval e = match e with
+| Int _ -> e
+| Bool _ -> e
+| If (e,e1,e2) ->	(match eval e with 
+	| Bool true -> eval e1
+	| Bool false -> eval e2
+	| _-> raise (stuck " guard is not bool"))
+	*** primitive operations
+|Primop (po, args) ->
+let arg values = List.map eval args ...
+
+
+
++ we are propagating values via substitutions
+
+
+**** Adding Functions and Function Application
++ functions are first class, they evaluate to themselves
++ important how you read these definitions
+
++ e1 e2 --> application
++ it is important to know what is legal syntax, what is non-sensical and what actually makes sense
+
++ you can do a function that branches ! but both branches must have the same type in order to not get an error
++ types are not only good becaue they help you to think rigirously about your program
+allow you to write more efficient interpreteres. because your type checker will have pre-scanned your program.
+
++ we can extend our evaluator to handle functions
+
+```
+
++ do we have a rule for every expression?
+	did we cover everything
++ always returns a value 
+	doesnt stop in a scenario where it freaks
++ termination
+	we cannot decide whether a progrm holds for any input
+	we couold prove that every program that we write that is well typed, is guaranteed to hold
+	
+	Implementations are great because we use them in everyday life
+	
+	How does typing work? How do we know that an expression is well typed? 
+	
+	
+	
+	
+	
+	let x = 3 in x + 1
+	
+	Idea:
+	assume x: int
+	show: infer the type of (x+1) namely int
+	
+	1) infer 3 = int
+	2) Assume x:int
+		 infer (x+1)
+	
+	TYPE CHECKING DOESNT DO ANY COMPUTATION
+	
+	let x = 3*2 in x+1
+	
+	Idea:
+	infer a type of 3*2. Aha! it is an int
+	Assume x: int (assume that the variable x is something of type int)
+	Next, infer the type of x+2
+	
+	1) intfer (3*2) = int
+	2) assume x: int (assume that the variable z is soemthing of type int)
+		infer (x+2)
+		
+	The game changes because we are assuming on top of other assumptions
+	
+	
+	infer(let x=3 in let y = true in y then x else x *2)
+	1) infer 3= int
+	2) assume x = int
+		infer ( let y = true if y then x else x *2)
+		2.1) infer true = bool
+		2.2) assume y: bool
+				infer ( if y then x else x *2)
+				
+				
+	How do we put this into math?/
+	
+Assume _____ 						Prove _____
+=============					================
+			|
+			V
+	Assumption 		|-				blah '
+capital gamma
+
+$\gamma$
+
+
+
+Learn how to read 
+
+e is of type bool GIVEN these assumptions...
+
+
+
+
+The key concept here... When do we collect assumptions and use them?
+13/18 slides
+
+
+We require x to be new. Because we do not want there to be a preexisting x that already "says" something
+ie. let x = true in x = 3 in x+3
+> warning: unused variable x
+-: int = 6
+
+overshadowing is happening
+
+but what happens if we infer like before...
+
+infer (let x = true in x = 3 in x+3)
+1) infer true = bool
+2) assume x: bool
+	 infer( let x = 3 in x+3) *******bound variables can always be renamed******
+	 infer( let y = 3 in y+3)
+	 2.1) infer 3 = int
+	 2.2) assume y: int
+	 			infer (y+3)
+				
+but in a mathematical environment we do not make any assumptions which are not inour set
+*****************we do this because bound variables can always be renamed****************
+
+
+
+
+
+	

@@ -20,7 +20,7 @@ Context Γ ::= 	• | Γ,x : T
 
 	Γ|- e : bool 	Γ |- e1 : T   Γ |- e2 : T				T-IF 						Γ(x) = T				T-VAR
  -----------------------------------------                   --------------
-     Γ |- if e then e1 else e2 : T													   Γ |- x : T
+     Γ |- if e then e1 else e2 : T													   Γ |- x : T  	we can just look 																															up the type of the variable here
 
 
 
@@ -30,12 +30,17 @@ Context Γ ::= 	• | Γ,x : T
 																														class)
 
 
+WE nneed to reason by assumptions --> we have expressions and some assumptions and then we figure out the type.
+
+
 
 ***** Gerneralizing to functions and function application******
 
 	Γ,x : T1 |- e : T2				T-FN					Γ |- e1 : T2 --> T   Γ |- e2 : T2			T-APP
  ---------------------									 ----------------------------------
 Γ |- fn x => e: T1 -> T2													 Γ |- e1 e2 : T
+
+WE should be able to verify that the function is well typed if ...
 
 
 =======================================================================================
@@ -44,7 +49,8 @@ Expression fn x=> e has type T1 --> t2 in a typing context Γ, if expression e h
 T2 in the extended context Γ,x : T1
 =======================================================================================
 
-The rule T-FN cannot be used for type inference... where is T1 coming from??
+The rule T-FN cannot be used for type inference... where is T1 coming from?? Because we want to make a recursive call with this experssion and some assumptions, we have no idea where this type of x is coming from..
+
 LAST CLASS WE SOLVED THIS USING TYPE ANNOTATION ON FUNCTIONS
 
 =======================================================================================
@@ -57,13 +63,264 @@ Expression e1 e2 has type T in a typing context Γ, if
 
 
 
-WE DO NOT WANNT TO USE TYPE ANNOTATIONS -- YUCKY
-WE WANT TO USE TYPE VARIABLES !!!!!!!!
+WE DO NOT WANT TO USE TYPE ANNOTATIONS -- YUCKY
+WE WANT TO USE TYPE VARIABLES !!!!!!!! Hindley-Milner Style
+		THERE 	is no notion of polymorphism in this language so far.
+		Using the same program for different types of inputs -- which is different than overloading. (during runtime decisions -- overloading -- used a lot in OO languages)
+		Polymorphis -- exact piece of code will run , you will need to have set criteria for th inputs though they may be different types
+		
+		We want to support polymorphism!!!!!!!
+		
+		
+**** Main idea:...*******
+
+
+Γ,x : T1 |- e : T2				T-FN					
+ ---------------------									
+Γ |- fn x => e: T1 -> T2				
+
+We cannot make thsi recursive call because we do not have all the information
+
+What do we do? Delay. Use a place holder for what the type of x should be.
+We postpone figuring out wht alpha is
+
+Type inferene: 
+Given assumptions in gamma and fn x=>e, we want to infer a type 
+	+ Make a recursive call and infer
+	
+	PICTURE
+	
+	
+Hopefully there is something for alpha that mkes this thing well typed.
+
+How can we add typed variables into our language.
 
 
 ********** TYPE VARIABLES : Two different Views **********
 
-Types T ::= int | bool | T1 --> t2 | 
+Types T ::= int | bool | T1 --> t2 | α
+Γ |- e : T   --> expression e has type T in context Γ where T and Γ may contain type variables
+
+A. are all substitution instances of e well typed? That is for every type substitution  o , we have [o]gamma |- e : [o]T 			---> TYPE CHECKING
+
+			---> this says that we have an instanciation for all variables in T
+			---> this is basically polymorphism, no matter wheat type you get , it wont freak 
+		
+			Examples for A:
+			
+			fn x => x 										has type a' -> 'a
+			fn f = > fn x = > f(f(x))			has type (a' -> 'a) -> 'a -> 'a
+		x : 'a |- fn f => f x 					has type ('a -> 'b ) -> 'b
+		under the assumption that x has some type
+		if no assumption, then x would be free
+		this would be detected before you do typing
+		
+B. Is some substitution instances of e well typed? That is for every type substitution  o , we have [o]gamma |- e : [o]T  		----> TYPE INFERENCE
+
+			Examples for B:
+			
+			fn x => x + 1 								has type 'a -> 'a		(choosing int for 'a)
+			fn x => x + 1									has type 'a -> 'b		chooce int for both 'a and 'b
+			
+			
+			
+			
+SLIDE 9/20
+
+SUPPERRRRR IMPORTANT
+
+
+
+
+
+
+
+
+
+
+
+ we are doing some examples now
+ 
+```
+let test x = if x = 0 then 77 else x + 3
+
+(*
+
+same argument 
+test: 			'a -> ___
+
+assume x : 'a
+infer a type for (if z = 0 then 77 else x+ 3)
+
+we know that both need to have the same type
+then we infer that (x=0 : bool) AND 'a : int
+
+First branch: 77 : int
+second branch:  
+infer (x+3)
+infer (x) = 'a 
+infer (3) : int
+
+then because you are adding, x has to be an int and thus --> 'a = int
+==> (x+3) : int
+
+Therefore overall, the overall type is 'a -> int PROVIDED THAT 'a INT.
+
+
+
+
+*)
+
+
+
+
+let rec repeat n f (* repeats f , n times*) =
+let n = 1 then (fun x -> f x)
+else elt kf = repeat (n-1) f in (fun x -> kf (f x))
+
+(*
+ repeat : 		'a -> 'b -> 'c 
+ 							 n		 f		 result
+							 
+							 
+	we learn that n: int --> 'a : int
+	we learn that result is a function --> 'c : 'a0 -> 'a1
+			what does this tell me about f? 
+					since i return (fun x -> f x) in the first branch
+	we then know that f --> b': 'a0 -> 'a1
+					
+*)
+
+
+
+let comp f g = fun x -> f (g x)
+
+(*
+
+
+
+comp: 		'a  	 ->	      b'     	->	 'c
+   		('d -> 'e) ->   ('c -> 'd)  ->   'c -> 'e
+			
+			
+			FUNCTION TYPES ARE RIGHT ASSOCIATIVE: 
+			the way to read this guy is 
+			('d -> 'e) ->   (('c -> 'd)  ->   ('c -> 'e))
+
+
+Assume f : 'a 		INFER the type of fun g -> fun x -> f (g x)
+Assume g : 'b			INFER the type of (fun x -> f (g x))
+Assume x : 'c			INFER the type of f(g x))
+
+
+START FROM THE INNER MOST PART
+
+start with (g x) --------------------
+
+WHAT IS (g x) -- we dont really know 
+so we say it has some type 'd
+we know it is a function and g should have type :   'c -> 'd
+
+now what about f(g x)) -------------------
+
+assume it has type 'e 
+hence the type of f should be ('d -> 'e)    --> 'a : 'd -> 'e
+
+
+
+
+
+*)
+
+
+```
+
+
+We want to model some constraints: 
+
+DAMAS - HINDLEY - MILNER STYLE TYPE INFERENCE - RECIPE ~~~~ on the slides not finished 
+
+Given a typing context gamma and an expression e
+
+
+IN ORDER TO DETERMINE IF THERE EXISTS SUCH A TYPE, WE NEED TO APPLY SOME CONSTRAINTS
+
+
+
+***INFerring Types and contraints by example***\
+
+find an instanciation that make all the equations true
+
+
+
+
+
+
+simplify yoru problem until you have the atomic parts and then rule out circularitites.
+
+```
+let test f x = 
+if f x 
+	then (f 3) + 1
+	else (f 2 ) * 2
+	
+	
+	(* 
+	is this a well typed program? NO
+	
+	test: 				'a 			-> 			'b 			-> 					?
+	
+	
+	assume f: 'a and x: 'b
+	infer the type of (if f x 
+												then (f 3) + 1
+												else (f 2 ) * 2)
+	
+	1) infer the type of f x --> well it should return a bool
+	'a : 'b -> bool
+	
+	2) infer the type of ((f 3) + 1) --> should return an int
+	hence,
+	'a int -> int
+	
+	3) infer the type of ((f 2) * 2) --> should return an int
+	hence,
+	'a int -> int
+	
+	CONSTRAINTS:
+	
+	'a : 'b -> bool	 AND 	'a : int -> int
+	
+	
+	'b -> bool = int -> int
+	
+	HOW DO WE GO FROM HERE TO HERE
+	
+	bool = int - NOT TRUE!!
+	
+	*)
+	
+```
+
+PICS !!!
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,0 +1,69 @@
+***** Recap: Typing with contexts *****
+Recall that this is our mini language which we are writing up. This doesn't accurately represent 
+
+Operations op ::= + | - | * | < | =
+Expressions e ::= n | e1 op e2 | true | false | if e then e1 else e2 | x | let x = e1 in e2 end
+
+Types T ::= int | bool
+Context Γ ::= 	• | Γ,x : T
+
+
+Γ |- e : T 					Expression e has type T given the typing context Γ
+
+
+
+           			  	T-NUM					Γ |- e1 : int   Γ |- e2 : int			T-PLUS
+ --------------									 -------------------------------
+  Γ |- n : int 													Γ |- e1 + e2 : int
+	
+	
+
+	Γ|- e : bool 	Γ |- e1 : T   Γ |- e2 : T				T-IF 						Γ(x) = T				T-VAR
+ -----------------------------------------                   --------------
+     Γ |- if e then e1 else e2 : T													   Γ |- x : T
+
+
+
+Γ |- e1 : T1    Γ,x : T1 |- e2 : T2				T-LET
+ ------------------------------------										NOTE: x must be new - we dont want it 
+Γ |- let x = e1 in e2 end : T														saying something already (covered last 
+																														class)
+
+
+
+***** Gerneralizing to functions and function application******
+
+	Γ,x : T1 |- e : T2				T-FN					Γ |- e1 : T2 --> T   Γ |- e2 : T2			T-APP
+ ---------------------									 ----------------------------------
+Γ |- fn x => e: T1 -> T2													 Γ |- e1 e2 : T
+
+
+=======================================================================================
+ Read T-FN rule as:
+Expression fn x=> e has type T1 --> t2 in a typing context Γ, if expression e has type 
+T2 in the extended context Γ,x : T1
+=======================================================================================
+
+The rule T-FN cannot be used for type inference... where is T1 coming from??
+LAST CLASS WE SOLVED THIS USING TYPE ANNOTATION ON FUNCTIONS
+
+=======================================================================================
+ Read T-APP rule as:
+Expression e1 e2 has type T in a typing context Γ, if 
+ + expression e1 has type T2 --> T in the context of Γ
+ + expression e2 has type T2 in the context of Γ
+=======================================================================================
+
+
+
+
+WE DO NOT WANNT TO USE TYPE ANNOTATIONS -- YUCKY
+WE WANT TO USE TYPE VARIABLES !!!!!!!!
+
+
+********** TYPE VARIABLES : Two different Views **********
+
+Types T ::= int | bool | T1 --> t2 | 
+
+
+

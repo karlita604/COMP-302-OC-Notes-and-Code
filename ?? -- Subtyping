@@ -1,0 +1,271 @@
+Subtyping --
+
+IN JAVA -- based on the classes
+SCALA -- 2 types: NAMES or function of your type.
+
+
+Every expression had a unique type. WHEN IT IS ABOUT TYPING THERE SHOULD BE ONLY ONE ANSWER.
+
+
+
+With subtyping .. the story is a little different. 
+
+**** the Essence of Subtyping ****
+Basic subtyping principle S =< T
+
+S is a subtype of T if we can provide a value of S whenever a value of type T is required.
++ This process is called an upcasting
+	+ You only need to remember the following: ^^^^^^
+	+ I have a program that uses something of type T but can I replace this with something that is of type S?
++ Upcasting often happens implicitely during typechecking
+
++ In Ocaml there is no subtyping. we insert the coercions explicitrly (float_of_int -> float) but we can imagine taht the compiler is inserting the appropriate calls to special casting functions cast.
++ not necessarily an easy function
+
+
+Lets think about it a little bit more
+We might want to destiguish the type of positive numbers with those numbers = 0.
+We want a more complex relationship and maybe reason by transitivity ( positive #s can be supplied for ints and floats).
+
+***How can we describe rigorously the subtyping relation?****
+
+Relations for int types...
+
+SLIDES
+
+
+
+***How about cross products??****
+
+When S1 * S2 a subtype of T1 * T2?
+Typle types are co-variant.
+The subtyping direction is the same in the premises and the conclusion.
+
+S1 =< T1	S2 =< T2		
+-------------------S-Prod
+S1 * S2 =< T1 * T2
+
+How would I make a reasonable judgement about tuples.
+We should eb looking at each of the components, maybe we need a tuple of certain type. General it should be by component!
+
+We comapre the component of the first part of the tuple with the required part of the tuple. 
+Often we dont work with tuples -- we work with records.
+
+How can we generalize this rule for n things on left side and n things on right side.
+Each of the components should be same as the other side.
+
+
+What else should we consider (relationships) for records? When can we supply one record in place of another record? When would that be safe.
+
+Records:
+
+Say we have a record that characterizes a point in space. Two fields. One has x,y and the other x.
+Should I be able to supply a record that only has one component but does not have the component x,y.
+No
+
+The record that has more fields is more precise and has more requirements to use it. And this is lower in the subtyping hierarchy.
+
+
+					S1 =< T1 .... Sn =< Tn 
+------------------------------------------- S-RDepth
+{ x1: S1,...xn : Sn} =< { x1: T1,...xn : Tn}
+
+
+
+
+***What about functions?****
+S1 -> S2 is a subtype of T1 -> T2 if we can provide a value of type S1 -> S2 whenever a value of T1 -> T2 is required?
+
+we can provide a function f1->f2 when we are required to provide a function from t1-> t2.
+can we provide a fucntion float -> float whenever a function int -> float is required????
+													-----															 ----
+						In other words...
+
+We can also replace a function int -> float with a function float -> float?
+															 ---      										------
+															 
+															 
+															 
+	Example -----
+	
+```
+let areaSqr (r: float) = r *. r
+let fakeArea (r:float) = 3
+
+areaSqr 2.2 +. 4.2 has type float
+
+	+ areaSqr 2.2 has type float
+	+ areaSqr
+
+
+
+Should the type checker accept :
+
+		(fakeArea 2.2) +. 4.2
+		
+```
+PIC FOR NEXT EXAMPLE .
+
+
+if it knows what to do with floats then it knows what to do with ints.
+
+
+
+*** This seems to suggest:***
+ We has a functiont aht was expecting a int and we wanted to supply a functiont that worked on floats.
+ CONTRAVARIANT --- mroe pwoerful.
+ 
+ 
+ 
+ When you start thinking about the structure of your program sand the structure of your types subtyping becomes super trivial
+
+
+WHAT ELSE DO WE HAVE? STATE
+
+WHAT kind of subtyping relation should hold in the presence of state?
+
+expression e ::= ... | e1 := e2 | !e | ref e | ()
+types T ::= .. | T ref | unit
+
+To understand a feature we can look at this example
+
+```
+let x = ref (2 + 3) in 
+x := !x * 2
+```
+
+ can we provide int ref for each ref?????
+ 
+ What is the typing rule for an update??
+ 
+ slide 16/23
+ 
+ 
+ Wehen we allocate it means that E was actually of type T. 
+ 
+ Lets look at some examples...
+ When we have references we do reads and writes. 
+ 
+ ```
+ let x = ref 5.0 in
+ let y = ref (2 + 3) in
+ 
+ !x *. 3.14
+ ```
+ 
+ x : float ref
+ y: int ref
+ 
+ 
+ Can we provide an int ref where ever a float ref ? Which would mean we consider an int ref a subtype of float ref.
+ Can we type !y *. 3.14 instead of !x *. 3.14?
+ 
+ Yes i think so!!
+ 
+ The coersion would need to go after we get the value.
+ 
+ this seems to suggest
+ 
+ 
+		  S=< t
+ -------------- S-Ref
+ S ref =< T ref
+ 
+ 
+ What about if we had... THE WRITING PERSPECTIVE !!!!!!!!!!
+  
+ ```
+ let x = ref 5.0 in
+ let y = ref (2 + 3) in
+ 
+ y := 4
+ ```
+ 
+ x : float ref
+ y: int ref
+ 
+ It is safe to write x:= 4 instead of y:=4?
+ Sure!!
+ 
+ so this means that we can provide an int ref in place of float ref( the other way around??)
+ IMPORTANT
+ float ref < subtype of int ref
+ 
+
+ IMPORTANT : int < (subtype) of float
+ because we know that we can change a 3 to a 3.0.
+
+
+If we have a program that only needs one component and you supply another thing that has two components, then your program it doesnt care because it doesnt see the other component. 
+
+It is important to think about your surrounding program.
+
+
+
+*** STATE AND SUBTYPING*****
+
+REFERENCES ARE CO-VARIANT AND CONTRA-VARIANT --> invariant!!!!!
+
+A sound rule for subtyping in the presence of references cannot allow any subtyping to happen!!!!!!!!
+
+		  S=< t
+ -------------- S-Ref
+ S ref =< T ref
+
+
+
+*** JAVA and subtyping***
++ Subclassing is a form of subtyping
++ Nominal Subtyping: User declares what type (class) extends antoher type (class)
+
+
+class mPoint{
+
+	private int
+	
+	
+	
+	RECAP:
+	
+	Basics: 
+					Built-in types  -- int =< floats
+					Reflexivity -- every type is a subtype of itself
+					Transitivity -- if S =< T and T =< U --> S =< U
+					
+Products: 
+					Are covariant in every component -- int * float =< float * float
+					
+Functions:
+					Are covariant in the output type. -- T --> int =< T --> float
+					Are covariant in the input type -- float --> T =< int --> T
+					Both phenomena can occur at once -- float --> int =< int --> float
+References: 
+					Are invariant --- S ref =< T ref if and only if S = T
+					
+					
+					
+					
+					
+					
+					downcasting == poor mans polymorphism
+					
+					upcasts are always safe!
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

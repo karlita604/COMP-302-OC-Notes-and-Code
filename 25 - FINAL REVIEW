@@ -1,0 +1,192 @@
+*** FOUR MAIN GOALS OF COMP 302 ***
+
+1. Provide a thorough introduction ot the fundamental concepts in programming languages
+		+ higher order functions
+		+ stateful vs stateless computation
+		+ modelling objects as closures
+		+ deferring control (via exceptions and continuations)
+		+ polymorphism
+		+ partial evaluation
+		+ lazy programming
+		+ modules
+2. Show different ways to reason about programs
+		+ type-checking
+		+ type inference
+		+ induction
+		+ operational semantics
+3. Introduce fundamental principles in programming language design
+		+ Grammars (formally)
+		+ operational semantics
+		+ type systems
+		+ interpreters
+		+ polymorphism
+		+ subtyping
+4. Expose you to a different way of thinking about problems
+
+
+*** FUNCTIONAL PROGRAMMING VS OOP ***
+
+Functional Programming:
+	+ Data and functions are decoupled
+	+ Easy to add new functionality
+	
+OOP:
+	+ Data and functions are coupled
+	+ Easy to add new data
+	
+	
+	
+	*** THERE ARE DIFFERENT TYPES... ***
+	
+	Expression fun x y -> if ( x :: y ) = [] then (y,x) else (x,y) has the most general type
+	
+	+ 'a list -> 'a -> 'a * 'a list
+	+ 'a -> 'a list -> 'a * 'a list
+	+ ill-typed
+	+ 'a list -> 'a -> 'a list * 'a
+	+ 'a -> 'a list -> 'a list * 'a
+	
+	reasoning:
+	answer: ill typed 
+	
+	
+	
+	
+	What is the most general type of the following:
+		let rec f x l = match l with
+		| [] -> x (f x l)
+		| _ -> f x
+		
+		+ ('b -> 'c) -> 'a list -> 'b
+		+ ill typed
+		+ ('a -> 'a) -> 'a list -> 'a
+		+ ('a list -> 'b) -> 'a lsit -> 'b
+		
+		reasoning:
+		answer:
+		
+	What is the most general type of the following?
+	let rec f l q =
+			if q < 0 then
+						l ( f l q ) + f l q
+			else
+						f l ( q - 1)
+						
+		+ (int -> int) -> int -> int
+		+ ill typed
+		+ Stack overflow - loop recursion?
+		+ (int -> 'a) -> int -> int
+		+ (int -> 'b) -> int -> 'b
+		
+		reasoning:
+		answer
+		
+
+What is the most general type:
+	let rec f x = f x in 
+	f 3 ^ "hello"
+	
+	+ ('a -> 'b) -> int -> string
+	+ int
+	+ string
+	+ ill typed
+	+ stack overflow
+	
+	reasoning:
+	answer:
+	
+	
+	what is the most general type?
+	
+	let q f = 
+	fun x -> 
+	let y = f x in
+	fun g -> y (g x)
+	
+	reasoning:
+	answer: ('a -> 'b -> 'c) -> 'a -> ('a -> 'b) -> 'c
+	
+
+*** WHAT ABOUT THE VALUES ***
+
+let x = ref (3 * 2) in
+let r = x in
+let f =
+	let r = ref 4 in
+	let a = ! x * 2 in
+	fun u ->
+	x := 1;
+	u + ! x + a + ! r
+in
+let x = ref 7 in
+let a = 10 in
+x := 2;
+f (! r * a )
+What value does this expression have ? 77
+
+
+What values does this expresssion have?
+
+let j = ref " jojo " in
+let h = j in
+let f =
+h := " JoJo ";
+fun pref suf ->
+h := pref ^ ! j ^ suf
+in
+let j = ref " jojo " in
+j := "Yes";
+f "[" "]";
+!h
+
+
+
+
+
+It’s all about variables ...
+What is the result of substituting y + 1 for x in the expression
+let y = x + 3 in fun y -> x + y
+
++ let y = (y + 1) + 3 in fun y’ -> (y + 1) + y’
++ let y = (y + 1) + 3 in fun y -> (y + 1) + y
++ let y = y + 4 in fun w -> (y + 1) + w
++ let v = (y + 1) + 3 in fun w -> (y + 1) + w
++ let y = (y’ + 1) + 3 in fun w -> (y’ + 1) + w
+		
+		
+*** AND EFFECTS ! ***
+
+let q f = 
+	let box = ref None in 
+	fun () ->
+	math !box with 
+	| None ->
+		let y = f () in 
+		box := Some y; y
+	|Some y -> y
+	
+let h1 = horribleComp 345 in 
+let h2 = fun () -> horribleComp 345 in 
+let h3 = q h2 in 
+
+1. When evaluating (h1, h2 )
+How many times is horribleComp executed?
+	+ 0
+	+ 1
+	+ 2
+	+ No way of telling
+
+2. When evaluating (h2 (), h2 ())
+How many times is horribleComp executed?
+	+ 0
+	+ 1
+	+ 2
+	+ No way of telling
+	
+	
+3. When evaluating (h3 (), h3 ())
+How many times is horribleComp executed?
+	+ 0
+	+ 1
+	+ 2
+	+ No way of telling

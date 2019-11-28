@@ -1,0 +1,81 @@
+CHAPTER 9 : BASIC PRINCIPLES OF PROGRAMMING LANGUAGES: SYNTAX AND SEMANTICS OF A LANGUAGE
+
+
+We have seen:
+	+ Data-types
+	+ Higher Order Functions
+	+ Continuations
+	+ Lazy Programming
+	+ State and other side effects
+	+ Structural Unduction
+	+ Type Inference
+	
+** Questions to get a better theoretical understanding of a language **
+
+What is the meaning of a program? 
+How will it execute its behavior?
+How can we reason about its execution?
+
+** Questions we may ask ourselves when learning a new language **
+
+What are the legal expressions I can write?
+What concept of a variable do we have?
+What expressions will be well-typed?
+How do typed languages infer the type of a given experssion?
+How will the program be executed?
+
+
+---- All these questions will help us debug code and write well-structured and correct programs .
+
+
+The goal is to understand the theoretical concepts behind a programming language -- enable us to design our own mimi programming language.
+ 	+ tools we use to describe programming languages 
+	+ reasoning about them
+	
+	
+SPECIFICATION OF A PROGRAMMING LANGUAGE:
+1. Grammar of a language (what are the syntactically legal expressions?)
+2. Operational dynamic semantics (how is the program executed?)
+3. Static semantics (=type system) ( when is a given program well-typed? what can we statically sat about the execution of a program without executing it?)
+
+
+
+**** 9.1 What are syntactically legal expressions (GRAMMAR OF LANGUAGE) ****
+
+Dexcribe the legal expressions of a language. Does it have booleans and if statements. Define well-formed expressions inductively.
+
+Definition 9.1.1: The set of expressions is defined by the following:
+		1. A number n is an expression
+		// a number
+		2. TRUE and FALSE are expressions.
+		//boolean
+		3. if e1 and e2 then e1 op e2 is an expression --> op = {+, -, *, =, <}
+		//operations
+		4. if e, e1 and e2 are expressions, then if e then e1 else e2 is an expression
+		//if statement
+		
+		
+THIS CAN ALSO BE WRITTEN AS :
+
+Operations op ::= + | - | * | = | <
+Expressions e ::= n | e1 op e2 | true | false | if e then e1 else e2
+
+
+The grammar tells us when expressions are syntactically well-formed
+Does NOT tell us if an expression is well-typed.
+
+//WHAT IS THE DIFFERENCE BETWEEN WELL-FORMED AND WELL-TYPED.
+
+Well-formed : Have the correct structure given by grammar
+Well-typed : When expressions are well-formed and make sense --> will execute to something
+
+
+**** 9.2 How do we evaluate an expression? (Operational Dynamic Semantics) ****
+
+We need to describe how an expression is going to be evaluated - the thinking procedure of the machine. What we will evaluate to. 
+
+Evaluation Judgement : e || v  (expression evaluates to a final value of v)
+												 \/
+What are the final values of v? 
+
+Values v ::= n | true | false

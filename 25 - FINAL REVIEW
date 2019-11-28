@@ -3,25 +3,45 @@
 1. Provide a thorough introduction ot the fundamental concepts in programming languages
 		+ higher order functions
 		+ stateful vs stateless computation
+			Exploited the fact that they hava a shared state
 		+ modelling objects as closures
 		+ deferring control (via exceptions and continuations)
+			giving change
+			backtracking using continuations
+			an example is giving change with continuations
 		+ polymorphism
+			same code that will be executed no matter what types you give to it
 		+ partial evaluation
 		+ lazy programming
-		+ modules
+			Exploited the idea that we do not compute within the function body, which delays the computation of the overall 
+		+ modules - NOT ON FINAL
+		
 2. Show different ways to reason about programs
 		+ type-checking
 		+ type inference
+			play around with this is HW6
+			understand when a program was well typed 
+			syntactically well formed -> type checking -> evaluation
 		+ induction
+			more precise way to see how a program is evaluated
 		+ operational semantics
-3. Introduce fundamental principles in programming language design
+		
+3. Introduce fundamental principles in programming language design (HW6)
 		+ Grammars (formally)
 		+ operational semantics
 		+ type systems
 		+ interpreters
 		+ polymorphism
 		+ subtyping
+	Really imporatnt to undestand these on a theoretical basis
+	
 4. Expose you to a different way of thinking about problems
+We have been ofrced to think recursively. 
+
+How to do append using pattern matching. Define list recursively
+Define list with linked list.
+Then use exceptions
+Then you find a solution with continuations instead.
 
 
 *** FUNCTIONAL PROGRAMMING VS OOP ***
@@ -30,13 +50,25 @@ Functional Programming:
 	+ Data and functions are decoupled
 	+ Easy to add new functionality
 	
+	Functionality is Primary! 
+	Adding new functions, is easy but to change the names of the ___ in function. We would need to change each function. 
+	
 OOP:
 	+ Data and functions are coupled
 	+ Easy to add new data
 	
+	Harder to add fucntionality to the system. 
+	
+	What you choose really depends on what your problem is and how you want to develop a solution.
+	Static typing is less error prone than Dynamic typing
+	Managed memory usage is way better than unmanaged memory usage ( malloc/ free)
 	
 	
-	*** THERE ARE DIFFERENT TYPES... ***
+	
+	It pays to craft sensible and good solutions.
+	
+	
+*** THERE ARE DIFFERENT TYPES... ***
 	
 	Expression fun x y -> if ( x :: y ) = [] then (y,x) else (x,y) has the most general type
 	
@@ -47,6 +79,10 @@ OOP:
 	+ 'a -> 'a list -> 'a list * 'a
 	
 	reasoning:
+	( x :: y ) --> x is in the 'a position and y in the 'a list position.
+	The outcomes do not agree with the given options in any way
+	
+	Recall: the type checker does not do any evaluation
 	answer: ill typed 
 	
 	
@@ -63,7 +99,15 @@ OOP:
 		+ ('a list -> 'b) -> 'a lsit -> 'b
 		
 		reasoning:
-		answer:
+		l is the second argument and this should be a list.
+		x is supposed to be a function of b to c
+		
+		but the return type of the first brach is b and second is c
+		
+		for the third option you have to look at the second branch, then it looks like it is well typed 
+		because x appartenly takes in the type that f returns and that l is a list.
+		
+		answer: ill - typed
 		
 	What is the most general type of the following?
 	let rec f l q =
@@ -79,7 +123,14 @@ OOP:
 		+ (int -> 'b) -> int -> 'b
 		
 		reasoning:
-		answer
+		takes in two argumetns
+		q compared to zero --> then q is int
+		then this leads us to believe that the return type of f is int
+		
+		then what is l? it is used as a function and is added to the return type of f = int 
+		thus --> l should be a function of int -> int
+		answer: 
+		(int -> int) -> int -> int
 		
 
 What is the most general type:
@@ -93,10 +144,16 @@ What is the most general type:
 	+ stack overflow
 	
 	reasoning:
-	answer:
+	f has type 'a -> 'b
+	we are concatinating a string
+	thus it is a string
+	
+	during runtime you run into an infinite loop.
+	
+	answer:string
 	
 	
-	what is the most general type?
+	what is the most general type? DO THIS ON YOUR OWN
 	
 	let q f = 
 	fun x -> 
@@ -109,8 +166,8 @@ What is the most general type:
 
 *** WHAT ABOUT THE VALUES ***
 
-let x = ref (3 * 2) in
-let r = x in
+let x = ref (3 * 2) in														
+let r = x in															
 let f =
 	let r = ref 4 in
 	let a = ! x * 2 in
@@ -123,6 +180,27 @@ let a = 10 in
 x := 2;
 f (! r * a )
 What value does this expression have ? 77
+
+
+
+the first (last one updated) gets updated to 2 
+f (6*10 = f 60 = 60 + 1 + 12 + 4
+
+
+
+
+
+
+| a |     10   |											|  u | -----|--------> u + !x + a !r
++---+----------+	       							+----+------+
+| x | 			---|----> {7}	-> {2}			|  a | 1 2  |
++---+----------+											+----+------+
+| f |  --------|--------------------->|  r | -----|---------> {4}
++---+----------+											+----+------+			
+| r |  --------|--------------|
++---+----------+							v
+| x |  --------|-----------> {6}
+
 
 
 What values does this expresssion have?
@@ -153,6 +231,12 @@ let y = x + 3 in fun y -> x + y
 + let v = (y + 1) + 3 in fun w -> (y + 1) + w
 + let y = (y’ + 1) + 3 in fun w -> (y’ + 1) + w
 		
+		b will not work because y will be captured by the other y !!!
+		third will not work we do not evaluate
+		you have to rename the avoid the bound variable ! So A is rnot right becasue we did not rename the other y
+		
+		ONLY RENAME BOUND OR POTENTIALLY BOUND VARIABLES
+		
 		
 *** AND EFFECTS ! ***
 
@@ -169,10 +253,10 @@ let h1 = horribleComp 345 in
 let h2 = fun () -> horribleComp 345 in 
 let h3 = q h2 in 
 
-1. When evaluating (h1, h2 )
+1. When evaluating (h1, h1 )
 How many times is horribleComp executed?
 	+ 0
-	+ 1
+	+ 1  THIS
 	+ 2
 	+ No way of telling
 
@@ -180,7 +264,7 @@ How many times is horribleComp executed?
 How many times is horribleComp executed?
 	+ 0
 	+ 1
-	+ 2
+	+ 2	THIS
 	+ No way of telling
 	
 	
@@ -190,3 +274,297 @@ How many times is horribleComp executed?
 	+ 1
 	+ 2
 	+ No way of telling
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* ********************************************************************************************************************** *)
+(* High order - croupier for simplified roulette *)
+
+(* We have a simplified roulette, where we have only two colours that
+   we can bet but if zero comes out, everyone loses *)
+
+type colour = Red | Black        (* The two colours we can bet on *)
+
+type result = colour option      (* The result of a run, it could be one of the colours or no colour if zero came up *)
+
+type amt = int
+type bet = amt * colour          (* The bet amount and to what colour *)
+
+type id = string
+type player = id * amt * bet option
+
+(* It is simple to see who won *)
+let compute (am, col : bet) : result -> int = function
+  | None -> 0
+  | Some col' -> if col = col' then am * 2 else 0
+
+(*
+Solve all these questions without using recursion or pattern
+matching on lists, but instead just use the HO functions we saw
+in class.
+ *)
+
+let players = [ ("Aliya", 1000, Some (400 , Red)) ;
+              ("Jerome", 800, Some (240 , Black)) ;
+              ("Mo" ,    900, Some (200, Black)) ;
+              ("Andrea", 950, Some ((100 , Red)))]
+
+(* Q1: given a list of players  compute the new amounts each player has and set their bets to None *)
+
+let compute_all_results l r = raise Todo
+
+We need to change the amounts they have available, if they win we add if they lose we subtract. 
+Use list.map and then use compute to see what needs to be updated or decreased
+
+
+(* Q2: given a list of bets and a result compute a list of winning players with their bets *)
+
+let compute_winners l r = 
+
+HO: Filter
+
+(* Q3: given a list of bets and a result compute how much money the casino needs to pay back *)
+
+let casino_playout l r =
+
+Exist.for All???
+
+(* Q4: given a list of bets and a result decide if nobody won *)
+
+let nobody
+
+(* Q4.b: decide if everybody won *)
+
+(* Q5: given a list of bets and a result compute if someone won *)
+
+(* Q6: given a list of bets return the highest winning *)
+
+(* Level-up (a bit more complicated) *)
+
+(* Q7: given a list of bets and a result compute the balance for the casino, how much it made *)
+
+(* Ninja level  *)
+
+(* Q8: Can you sort the results by the amount they made? *)
+
+                                 
+(* ---------------------------------------------------- *)
+(* Revisiting Exceptions and Continuations              *)
+(* ---------------------------------------------------- *)
+(* ---------------------------------------------------- *)
+exception Change
+
+(* change: : int list -> int -> int list *)
+let rec change coins amt = 
+  match coins with
+  | _ when amt = 0 -> []
+  | [] -> raise Change // amount was non -zero
+  | c :: cs when c > amt ->					// if we had a lsit of coins and the coin was not useful (too big)
+     change cs amt
+  | c :: cs ->
+     try
+       c :: change coins (amt - c) 		// if it is smaller, we keep the coins
+     with
+       Change -> change cs amt
+
+let change_top coins amt =
+  try
+    Some (change coins amt)
+  with
+    Change -> None
+
+
+(* Giving change with continuations *)
+let rec cchange (coins: int list) (amt:int)
+          (sc: int list -> 'r) (fc: unit -> 'r) =
+					// we want to keep the same structure as first example and then we will see what to do
+					match coins with 
+					| _ when amt = 0 -> sc[]
+					| [] -> fc()
+					|c :: cs when c > amt ->  cchange cs amt sc fc
+					| c :: cs -> cchange coins (amt - c) ( fun ch -> sc ( c :: ch)) (fun () -> cchange cs amt sc fc)
+							
+					
+					
+		
+					
+					
+					
+  match coins with
+  | _ when amt = 0 -> sc []
+  | [] -> fc ()
+  | c :: cs when c > amt ->
+     cchange cs amt sc fc
+  | c :: cs ->
+     cchange cs (amt - c)
+       (fun ch -> sc (c :: ch))
+       (fun () -> cchange cs amt sc fc)
+
+
+let cchange_top coins amt = 
+  cchange coins amt (fun ch -> Some ch) (fun () -> None)
+
+(* Here is the behavior of change_top : 
+
+# change_top [5 ; 2] 3;;
+- : int list option = None
+# change_top [5 ; 2] 8;;
+- : int list option = Some [2; 2; 2; 2]
+# change_top [25;10;5;2] 43;;
+- : int list option = Some [25; 10; 2; 2; 2; 2]
+# change_top [25;10;5;2] 44;;
+- : int list option = Some [25; 10; 5; 2; 2]
+# change_top [25;10;2] 44;;
+Return the following change: 
+- : int list option = Some [10; 10; 10; 10; 2; 2]
+# change_top [25;10;2] 43;;
+- : int list option = Some [25; 10; 2; 2; 2; 2]
+# change_top [25;10;2] 23;;
+- : int list option = None
+# 
+*)
+
+  
+(* ---------------------------------------------------- *)
+(* Lazy Programming                                     *)
+(* ---------------------------------------------------- *)
+(* ---------------------------------------------------- *)
+(* Suspended computation : we can suspend computation
+   by wrapping it in a closure. *)
+type 'a susp = Susp of (unit -> 'a)
+
+(* delay: *)
+let delay f = Susp(f)
+
+(* force: *)
+let force (Susp f) = f ()
+
+(* ---------------------------------------------------- *)
+(* Define an infinite stream via observations we can make 
+   about it.
+*)
+
+type 'a str = {hd: 'a  ; tl : ('a str) susp} 
+
+let rec str_ones = {hd = 1 ; tl = Susp (fun () -> str_ones)}
+
+let rec numsFrom n = 
+{hd = n ; 
+ tl = Susp (fun () -> numsFrom (n+1))}
+
+let nats = numsFrom 0
+
+(* ---------------------------------------------------- *)
+(* Inspect a stream up to n elements 
+
+*)
+let rec take_str n s = match n with 
+  | 0 -> []
+  | n -> s.hd :: take_str (n-1) (force s.tl)
+
+(* ------------------------------------------------------- *)
+(* Catalan Numbers *)
+
+(* C_0     = 1
+   C_(n+1) = 2(2n + 1)/(n+2) * C_n *)
+
+let catalan =
+  let rec go n cn =
+    { hd = cn
+    ; tl =
+        Susp
+          begin fun () ->
+          let cn1 = 2 * (2 * n + 1) * cn / (n + 2) in
+          go (n + 1) cn1
+          end
+    }
+  in
+  go 0 1
+       
+(* ---------------------------------------------------- *)
+(* Objects and references                               *)
+(* ---------------------------------------------------- *)
+
+(** The state of a door. *)
+type state = Open | Closed
+
+(** Raised when a door cannot be passed. *)
+exception Impassable
+
+(** Raised when an invalid state change is requested,
+    viz. open an already open door or close an already closed door.
+ *)
+exception InvalidState
+
+type door =
+  { set_state : state -> unit
+  ; pass : unit -> bool
+  }
+
+(* Write a function make_door () to generate an object of type `door`.
+
+   The set_state function should adjust the state of the door.  It
+   should raise `InvalidState` if the door is already in the requested
+   state.
+
+   The function `pass` should return true if and only if one can pass
+   through the door, i.e. if the door is open.
+
+   The door should be initially closed. *)
+
+(* make_door : unit -> door *) 
+let make_lock () =
+  let s = ref Closed in
+  { set_state =
+      (fun s' -> if !s = s' then raise InvalidState else s := s')
+  ; pass = fun () -> !s = Open
+  }
+
+(* ---------------------------------------------------- *)
+(* ---------------------------------------------------- *)
+(* INDUCTION PROOF *)
+(*
+let rec size t = match t with 
+  | Leaf -> 0 
+  | Node (l, x, r) -> x + size l + size r
+
+let rec size_acc t acc = match t with 
+  | Leaf -> acc
+  | Node (l, x, r) -> size_acc l (x + size_acc  r acc)  
+
+(*
+THEOREM:  size t + acc = size_acc t acc 
+
+*)
+*)
+
+
+
+
+
+
+(* ---------------------------------------------------- *)
+(* THANK YOU - IT WAS A LOT OF FUN!                     *)
+(* ---------------------------------------------------- *)
+
+
+
+
+
